@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let SecondhandContentSchema = mongoose.Schema({
     iid: {
-        type: Number,
+        type: String,
         index: true
     },
     uid: {
-        type: Number,
+        type: String,
         index: true
     },
     title: String,
@@ -20,9 +20,9 @@ let SecondhandContentSchema = mongoose.Schema({
         enum: [0, 1, 2], // 0：都可以  1：自提，2：送货上门
         default: 0,
     },
-    deliveryAddressId: Number,
+    deliveryAddressId: String,
     takerId: {
-        type: Number,
+        type: String,
         index: true,
         default: 0
     },

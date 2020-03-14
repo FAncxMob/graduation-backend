@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let InvitationsSchema = mongoose.Schema({
     invitationsId: {
-        type: Number,
+        type: String,
         index: true
     },
     uid: {
-        type: Number,
+        type: String,
         index: true
     },
     classify: {

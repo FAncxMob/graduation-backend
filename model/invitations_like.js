@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let InvitationsLikeSchema = mongoose.Schema({
     invitationsId: {
-        type: Number,
+        type: String,
         index: true
     },
     userId: {
-        type: Number,
+        type: String,
         index: true
     },
     createTime: {

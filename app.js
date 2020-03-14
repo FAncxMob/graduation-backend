@@ -6,15 +6,39 @@ let {
     getFollowsAndFansByUserId,
     getInvitationsByClass,
     getInvitationsByUserId,
-    getInvitationsByUserIdAndClass
+    getInvitationsByUserIdAndClass,
+    saveOrUpdateUserInfo
 } = require('./util')
+
+var UserModel = require('./model/user')
+// UserModel.createUser(10, (err, doc) => {
+//     console.log(err, doc)
+// })
 
 var jwt = require('jsonwebtoken');
 let Fly = require("flyio/src/node")
 let fly = new Fly;
 
 // 测试验证身份token的接口
+router.get('/saveOpenId', async (ctx, next) => {
+    console.log('/saveOpenId')
+    // 获取token和userInfo的值
+    let userInfo = ctx.query.userInfo
+    let token = ctx.request.header.authorization
+
+    try {
+        let result = jwt.verify(token, 'fcx')
+        let saveResult = await saveOrUpdateUserInfo(result.openid, userInfo)
+
+        ctx.body = saveResult
+    } catch {
+        ctx.body = 'token验证失败'
+    }
+})
+
+// 测试验证身份token的接口
 router.get('/testToken', (ctx, next) => {
+    console.log('/testToken')
     // 获取token 的值
     let token = ctx.request.header.authorization
     try {
@@ -39,7 +63,8 @@ router.get('/getOpenId', async (ctx, next) => {
     let result = await fly.get(url)
     userInfo = JSON.parse(result.data)
 
-    // 将用户的openId存入数据库
+    // TODO:将用户的openId存入数据库
+
 
     // 自定义登录状态，就是根据用户的openId和sessionKey进行加密生成token，返回给前端
     // d对openId和sessionKey进行加密,自定义登录状态
@@ -53,6 +78,7 @@ router.get('/getOpenId', async (ctx, next) => {
  * 根据userId和class获取当前用户发布的某类帖子
  */
 router.get('/getInvitationsByUserIdAndClass', async (ctx, next) => {
+    console.log('/getInvitationsByUserIdAndClass')
     // 1. 获取请求的参数,注意拿来的是字符串，数据库里的是number！！！！
     let req = ctx.request.query
     let userId = +req.userId
@@ -72,31 +98,7 @@ router.get('/getInvitationsByUserIdAndClass', async (ctx, next) => {
  * 根据userId获取当前用户发布的全部帖子
  */
 router.get('/getInvitationsByUserId', async (ctx, next) => {
-    // 1. 获取请求的参数,注意拿来的是字符串，数据库里的是number！！！！
-    let req = ctx.request.query
-    let userId = +req.userId
-
-    // 2. 查询数据库获取数据
-    let legwork = await getInvitationsByUserIdAndClass(userId, 0)
-    let secondhand = await getInvitationsByUserIdAndClass(userId, 1)
-    let partTimeJob = await getInvitationsByUserIdAndClass(userId, 2)
-    let lostAndFound = await getInvitationsByUserIdAndClass(userId, 3)
-
-    let result = {
-        userId,
-        legwork,
-        secondhand,
-        partTimeJob,
-        lostAndFound
-    }
-    // 3. 响应数据
-    ctx.body = {
-        code: 0,
-        result
-    }
-})
-
-router.get('/getInvitationsByUserId', async (ctx, next) => {
+    console.log('/getInvitationsByUserId')
     // 1. 获取请求的参数,注意拿来的是字符串，数据库里的是number！！！！
     let req = ctx.request.query
     let userId = +req.userId

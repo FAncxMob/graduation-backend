@@ -2,20 +2,20 @@ let mongoose = require('./db.js')
 
 let CommentsSchema = mongoose.Schema({
     commentId: {
-        type: Number
+        type: String
     },
-    uid: Number,
+    uid: String,
     iid: {
-        type: Number,
-        index:true
+        type: String,
+        index: true
     },
-    replyId: Number,
-    pid: Number,
+    replyId: String,
+    pid: String,
     content: String,
     createTime: {
         type: String,
-        index:true
+        index: true
     }
 })
 
-module.exports = mongoose.model('comments',CommentsSchema,'comments')
+module.exports = mongoose.model('comments', CommentsSchema, 'comments')

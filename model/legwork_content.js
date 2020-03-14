@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let LegworkContentSchema = mongoose.Schema({
     iid: {
-        type: Number,
+        type: String,
         index: true
     },
     uid: {
-        type: Number,
+        type: String,
         index: true
     },
     title: String,
@@ -19,11 +19,11 @@ let LegworkContentSchema = mongoose.Schema({
     },
     expectedTime: String,
     addressId: {
-        type: Number,
+        type: String,
         index: true
     },
     takerId: {
-        type: Number,
+        type: String,
         index: true,
         default: 0
     },

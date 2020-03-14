@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let LostAndFoundContentSchema = mongoose.Schema({
     iid: {
-        type: Number,
+        type: String,
         index: true
     },
     uid: {
-        type: Number,
+        type: String,
         index: true
     },
     tag: {

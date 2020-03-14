@@ -2,11 +2,11 @@ let mongoose = require('./db.js')
 
 let UserFollowSchema = mongoose.Schema({
     userId: {
-        type: Number,
+        type: String,
         index: true
     },
     followId: {
-        type: Number,
+        type: String,
         index: true
     },
     createTime: {

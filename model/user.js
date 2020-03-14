@@ -2,11 +2,21 @@ let mongoose = require('./db.js')
 
 let UserSchema = mongoose.Schema({
     userId: {
-        type: Number,
-        index: true
+        type: String,
+        index: true,
+        require: true
     },
-    openId: Number,
+    openId: {
+        type: String,
+        require: true,
+        index: true,
+    },
     nickname: String,
+    gender: {
+        type: Number,
+        default: 1,
+        enum: [1, 2], // 1：男，2：女
+    },
     avatar: String,
     desc: String,
     school: String,
@@ -26,8 +36,9 @@ UserSchema.statics.createUser = function (num, cb) {
     for (let index = 1; index <= num; index++) {
         let u = new this({
             userId: index,
-            openId: index,
+            openId: `${index}`,
             nickname: `nameIs ${index}`,
+            gender: 2,
             avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132',
             school: '湖北经济学院',
             faculty: '信息与通信工程',
