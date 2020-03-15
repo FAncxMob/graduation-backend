@@ -7,8 +7,10 @@ let {
     getInvitationsByClass,
     getInvitationsByUserId,
     getInvitationsByUserIdAndClass,
-    saveOrUpdateUserInfo,
-    isOurSchool
+    saveUserInfo,
+    isOurSchool,
+    haveUser,
+    getUserInfo
 } = require('./util')
 
 var UserModel = require('./model/user')
@@ -21,6 +23,30 @@ let fly = new Fly;
 // UserModel.createUser(10, (err, doc) => {
 //     console.log(err, doc)
 // })
+
+// 获取老用户的用户信息
+router.get('/getUserInfo', async (ctx, next) => {
+    console.log('/getUserInfo')
+    let code = 0
+    // 获取token和userInfo的值
+    let token = ctx.request.header.authorization
+
+    try {
+        let result = jwt.verify(token, 'fcx')
+        let userInfo = await getUserInfo(result.openid)
+        ctx.body = {
+            code: 1,
+            userInfo
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
 
 
 // 登陆的接口(保存OpenId和用户信息)
@@ -36,31 +62,23 @@ router.get('/login', async (ctx, next) => {
     try {
         let result = jwt.verify(token, 'fcx')
 
-        let result2 = await isOurSchool(data)
-        let saveResult = '不是我校人员'
-        if (result2) {
+        let isOurSchoolResult = await isOurSchool(data)
+        if (isOurSchoolResult) {
             // 是我校人员才将openId写入数据库
-            saveResult = await saveOrUpdateUserInfo(result.openid, data)
+            await saveUserInfo(result.openid, data)
             code = 1
         }
         ctx.body = {
-            code,
-            message: saveResult
+            code
         }
-
-
-
-
 
     } catch {
         ctx.body = {
             code: 0,
-            message: 'token验证失败'
+            message: 'token验证失败辽'
         }
     }
 })
-
-
 
 //  登陆的接口(保存OpenId和用户信息)
 router.get('/saveOpenId', async (ctx, next) => {
@@ -105,16 +123,18 @@ router.get('/getOpenId', async (ctx, next) => {
     // 发送请求给微信接口，获取openId
     let result = await fly.get(url)
     userInfo = JSON.parse(result.data)
-
-    // TODO:将用户的openId存入数据库
-
+    // 判断是新用户还是老用户
+    let _haveUser = await haveUser(userInfo.openid)
 
     // 自定义登录状态，就是根据用户的openId和sessionKey进行加密生成token，返回给前端
     // d对openId和sessionKey进行加密,自定义登录状态
     let token = jwt.sign(userInfo, 'fcx')
 
     // 3. 响应数据
-    ctx.body = token
+    ctx.body = {
+        token,
+        haveUser: _haveUser
+    }
 })
 
 /**
