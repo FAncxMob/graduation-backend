@@ -16,20 +16,41 @@ var CommentsLikeModel = require('./model/comments_like')
 
 var AddressModel = require('./model/address')
 
+var StudentModel = require('./model/student')
+
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
 
+
+// 根据sno和身份证号判断是否是我校学生
+let isOurSchool = async (data) => {
+    let {
+        sno,
+        idCard,
+        name
+    } = data
+    let doc = await StudentModel.find({
+        sno,
+        idCard,
+        name
+    })
+    return doc.length === 1 ? true : false
+
+}
 // 保存openId，如果已经存在，则只做修改操作
-let saveOrUpdateUserInfo = async function (openId, userInfo) {
+let saveOrUpdateUserInfo = async function (openId, data) {
     let str = ''
     let num = await haveUser(openId)
     if (num === 1) {
         let newUser = {
-            nickname: userInfo.nickName,
-            avatar: userInfo.avatarUrl,
-            gender: userInfo.gender
+            sno: data.sno,
+            name: data.name,
+            idCard: data.idCard,
+            tel: data.tel,
+            school: data.school,
+            faculty: data.faculty
         }
         await UserModel.updateOne({
-            "openId": openId
+            openId
         }, newUser)
         str = "更新了user~"
         // 已经有了， 做修改操作
@@ -37,17 +58,19 @@ let saveOrUpdateUserInfo = async function (openId, userInfo) {
     } else if (num === 0) {
         // 还没有，做添加操作
         let n = new UserModel({
-            userId: openId,
             openId: openId,
-            nickname: userInfo.nickName,
-            avatar: userInfo.avatarUrl,
-            gender: userInfo.gender
+            sno: data.sno,
+            name: data.name,
+            idCard: data.idCard,
+            tel: data.tel,
+            school: data.school,
+            faculty: data.faculty
         })
         await n.save()
         str = "添加了新的user~"
         console.log('添加了新的user~')
     } else {
-        str = "error"
+        str = "你特么的为什么数据库里有重复的openId没清理干净？"
         console.log('你特么的为什么数据库里有重复的User没清理干净？')
     }
     return str
@@ -485,5 +508,6 @@ module.exports = {
     getInvitationsByClass,
     getInvitationsByUserId,
     getInvitationsByUserIdAndClass,
-    saveOrUpdateUserInfo
+    saveOrUpdateUserInfo,
+    isOurSchool
 }

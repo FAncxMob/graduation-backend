@@ -5,7 +5,7 @@ let LegworkContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    uid: {
+    openId: {
         type: String,
         index: true
     },
@@ -17,7 +17,7 @@ let LegworkContentSchema = mongoose.Schema({
         type: Number,
         default: 99999
     },
-    expectedTime: String,
+    expectedTime: Number,
     addressId: {
         type: String,
         index: true

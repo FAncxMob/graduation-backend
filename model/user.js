@@ -1,32 +1,31 @@
 let mongoose = require('./db.js')
 
 let UserSchema = mongoose.Schema({
-    userId: {
-        type: String,
-        index: true,
-        require: true
-    },
     openId: {
         type: String,
         require: true,
         index: true,
     },
-    nickname: String,
-    gender: {
-        type: Number,
-        default: 1,
-        enum: [1, 2], // 1：男，2：女
-    },
-    avatar: String,
+    tel: String,
+    idCard: String,
+    name: String,
     desc: String,
     school: String,
     faculty: String,
     major: String,
-    sno: Number,
+    sno: String,
     status: {
         type: Number,
         default: 1
-    },
+    }
+    // nickname: String,
+    // gender: {
+    //     type: Number,
+    //     default: 1,
+    //     enum: [1, 2], // 1：男，2：女
+    // },
+    // avatar: String,
+
 })
 
 // 静态方法
@@ -35,15 +34,16 @@ let UserSchema = mongoose.Schema({
 UserSchema.statics.createUser = function (num, cb) {
     for (let index = 1; index <= num; index++) {
         let u = new this({
-            userId: index,
-            openId: `${index}`,
-            nickname: `nameIs ${index}`,
-            gender: 2,
-            avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132',
+            openId: `openId${index}`,
+            tel: `tel${index}`,
+            idCard: `idCard${index}`,
+            name: `name${index}`,
+            desc: `desc${index}`,
             school: '湖北经济学院',
             faculty: '信息与通信工程',
             major: '软件工程',
-            sno: `1616${index}`
+            sno: `sno${index}`,
+
         })
 
         u.save(function (err, doc) {
@@ -58,7 +58,7 @@ UserSchema.statics.createUser = function (num, cb) {
 }
 
 // 清空User
-UserSchema.statics.removeAllUser = function (a, cb) {
+UserSchema.statics.removeAllUser = function (cb) {
     this.remove({
         "major": "软件工程"
     }, (err, doc) => {

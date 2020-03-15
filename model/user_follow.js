@@ -1,7 +1,7 @@
 let mongoose = require('./db.js')
 
 let UserFollowSchema = mongoose.Schema({
-    userId: {
+    openId: {
         type: String,
         index: true
     },

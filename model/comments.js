@@ -2,18 +2,28 @@ let mongoose = require('./db.js')
 
 let CommentsSchema = mongoose.Schema({
     commentId: {
-        type: String
+        type: String,
+        index: true
     },
-    uid: String,
+    openId: {
+        type: String,
+        index: true
+    },
     iid: {
         type: String,
         index: true
     },
-    replyId: String,
-    pid: String,
+    replyId: {
+        type: String,
+        index: true
+    },
+    pid: {
+        type: String,
+        index: true
+    },
     content: String,
     createTime: {
-        type: String,
+        type: Number,
         index: true
     }
 })

@@ -1,7 +1,7 @@
 let mongoose = require('./db.js')
 
 let CommentsLikeSchema = mongoose.Schema({
-    userId: {
+    openId: {
         type: String,
         index: true
     },
@@ -10,7 +10,7 @@ let CommentsLikeSchema = mongoose.Schema({
         index: true
     },
     createTime: {
-        type: String,
+        type: Number,
         index: true
     }
 })

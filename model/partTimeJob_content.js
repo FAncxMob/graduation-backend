@@ -5,7 +5,7 @@ let PartTimeJobContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    uid: {
+    openId: {
         type: String,
         index: true
     },

@@ -5,7 +5,7 @@ let AddressSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    uid: {
+    openId: {
         type: String,
         index: true // 索引
     },

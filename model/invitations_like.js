@@ -5,12 +5,12 @@ let InvitationsLikeSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    userId: {
+    openId: {
         type: String,
         index: true
     },
     createTime: {
-        type: String,
+        type: Number,
         index: true
     }
 })

@@ -7,19 +7,62 @@ let {
     getInvitationsByClass,
     getInvitationsByUserId,
     getInvitationsByUserIdAndClass,
-    saveOrUpdateUserInfo
+    saveOrUpdateUserInfo,
+    isOurSchool
 } = require('./util')
 
 var UserModel = require('./model/user')
-// UserModel.createUser(10, (err, doc) => {
-//     console.log(err, doc)
-// })
 
 var jwt = require('jsonwebtoken');
 let Fly = require("flyio/src/node")
 let fly = new Fly;
 
-// 测试验证身份token的接口
+
+// UserModel.createUser(10, (err, doc) => {
+//     console.log(err, doc)
+// })
+
+
+// 登陆的接口(保存OpenId和用户信息)
+// code ：用于表示认证（登陆）是否成功，1：成功，0：失败
+// message：具体的登陆失败信息
+router.get('/login', async (ctx, next) => {
+    console.log('/login')
+    // 获取token和userInfo的值
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    let code = 0 // 用于表示认证是否成功，1：成功，0：失败
+
+    try {
+        let result = jwt.verify(token, 'fcx')
+
+        let result2 = await isOurSchool(data)
+        let saveResult = '不是我校人员'
+        if (result2) {
+            // 是我校人员才将openId写入数据库
+            saveResult = await saveOrUpdateUserInfo(result.openid, data)
+            code = 1
+        }
+        ctx.body = {
+            code,
+            message: saveResult
+        }
+
+
+
+
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败'
+        }
+    }
+})
+
+
+
+//  登陆的接口(保存OpenId和用户信息)
 router.get('/saveOpenId', async (ctx, next) => {
     console.log('/saveOpenId')
     // 获取token和userInfo的值
