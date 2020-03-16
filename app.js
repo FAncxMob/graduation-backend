@@ -10,7 +10,8 @@ let {
     saveUserInfo,
     isOurSchool,
     haveUser,
-    getUserInfo
+    getUserInfo,
+    updateUserInfo
 } = require('./util')
 
 var UserModel = require('./model/user')
@@ -23,6 +24,62 @@ let fly = new Fly;
 // UserModel.createUser(10, (err, doc) => {
 //     console.log(err, doc)
 // })
+
+// 获取关注粉丝数据
+router.get('/updateUserInfo', async (ctx, next) => {
+    console.log('/updateUserInfo')
+    let code = 0
+    // 获取token和userInfo的值
+    let token = ctx.request.header.authorization
+    let data = ctx.query
+    try {
+        let result = jwt.verify(token, 'fcx')
+
+        let updateResult = await updateUserInfo(result.openid, data)
+        if (updateResult) {
+            code = 1
+            console.log('/updateUserInfo  更新成功了')
+        }
+        ctx.body = {
+            code
+        }
+
+    } catch {
+        console.log('/updateUserInfo  更新失败了！')
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 老用户更新userInfo
+router.get('/updateUserInfo', async (ctx, next) => {
+    console.log('/updateUserInfo')
+    let code = 0
+    // 获取token和userInfo的值
+    let token = ctx.request.header.authorization
+    let data = ctx.query
+    try {
+        let result = jwt.verify(token, 'fcx')
+
+        let updateResult = await updateUserInfo(result.openid, data)
+        if (updateResult) {
+            code = 1
+            console.log('/updateUserInfo  更新成功了')
+        }
+        ctx.body = {
+            code
+        }
+
+    } catch {
+        console.log('/updateUserInfo  更新失败了！')
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 
 // 获取老用户的用户信息
 router.get('/getUserInfo', async (ctx, next) => {
@@ -46,8 +103,6 @@ router.get('/getUserInfo', async (ctx, next) => {
         }
     }
 })
-
-
 
 // 登陆的接口(保存OpenId和用户信息)
 // code ：用于表示认证（登陆）是否成功，1：成功，0：失败

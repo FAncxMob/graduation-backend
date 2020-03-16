@@ -21,6 +21,15 @@ var StudentModel = require('./model/student')
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
 
 
+// 更新userInfo
+let updateUserInfo = async (openId, data) => {
+    let result = await UserModel.updateOne({
+        openId
+    }, data)
+    console.log(result)
+    return result.n && result.ok ? true : false
+}
+
 // openId获取老用户的信息
 let getUserInfo = async (openId) => {
     let doc = await UserModel.find({
@@ -29,9 +38,9 @@ let getUserInfo = async (openId) => {
         "_id": 0,
         "openId": 0,
         "__v": 0,
-        "idCard": 0,
-        "sno": 0,
-        "name": 0
+        "idCard": 0
+        // "sno": 0,
+        // "name": 0
     })
     doc = doc[0]
     return doc
@@ -58,12 +67,7 @@ let saveUserInfo = async function (openId, data) {
 
     let n = new UserModel({
         openId: openId,
-        sno: data.sno,
-        name: data.name,
-        idCard: data.idCard,
-        tel: data.tel,
-        school: data.school,
-        faculty: data.faculty
+        ...data
     })
     await n.save()
 }
@@ -384,34 +388,33 @@ let getCommentsByIID = function (iid) {
 }
 
 // 根据userId查询 关注（关注与粉丝）的数据
-let getFollowsAndFansByUserId = function (userId) {
+let getFollowsAndFansByUserId = function (openId) {
     UserModel.aggregate([{
             $lookup: {
                 from: 'user_follow',
-                localField: 'userId',
-                foreignField: 'userId',
+                localField: 'openId',
+                foreignField: 'openId',
                 as: 'follows'
             }
         },
         {
             $lookup: {
                 from: 'user_follow',
-                localField: 'userId',
-                foreignField: 'followId',
+                localField: 'openId',
+                foreignField: 'openId',
                 as: 'fans'
             }
         },
         {
             $match: {
-                "userId": userId
+                openId
             }
         },
         {
             $project: {
                 "_id": 0,
                 "fans": 1,
-                "follows": 1,
-                "userId": 1
+                "follows": 1
             }
         },
     ], (err, doc) => {
@@ -426,16 +429,15 @@ let getFollowsAndFansByUserId = function (userId) {
             return follow.followId
         })
         fans = fans.map((fan) => {
-            return fan.userId
+            return fan.openId
         })
 
         UserModel.find({
-            userId: {
+            openId: {
                 $in: follows
             }
         }, {
             _id: 0,
-            userId: 1,
             nickname: 1,
             avatar: 1,
             desc: 1
@@ -501,5 +503,6 @@ module.exports = {
     saveUserInfo,
     isOurSchool,
     haveUser,
-    getUserInfo
+    getUserInfo,
+    updateUserInfo
 }

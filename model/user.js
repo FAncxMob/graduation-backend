@@ -9,7 +9,10 @@ let UserSchema = mongoose.Schema({
     tel: String,
     idCard: String,
     name: String,
-    desc: String,
+    desc: {
+        type: String,
+        default: '写点什么来介绍一下自己吧~'
+    },
     school: String,
     faculty: String,
     major: String,
@@ -17,14 +20,14 @@ let UserSchema = mongoose.Schema({
     status: {
         type: Number,
         default: 1
-    }
-    // nickname: String,
+    },
+    nickName: String,
     // gender: {
     //     type: Number,
     //     default: 1,
     //     enum: [1, 2], // 1：男，2：女
     // },
-    // avatar: String,
+    avatar: String
 
 })
 
@@ -43,6 +46,8 @@ UserSchema.statics.createUser = function (num, cb) {
             faculty: '信息与通信工程',
             major: '软件工程',
             sno: `sno${index}`,
+            nickName: 'nickName',
+            avatar: 'avatarUrl'
 
         })
 
