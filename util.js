@@ -496,6 +496,132 @@ let dbOperate = {
         })
         let result = await n.save()
         console.log(result)
+    },
+
+    // 获取点赞数据（分我的帖子和我的回复）
+    async getLikeByOpenId(openId) {
+        // 获取回复点赞数据
+        // 1. 查询comments 获取该openId所有的commentId。获得数组commentIdArr，
+        let commentIdDoc = await CommentsModel.find({
+            openId
+        })
+        let commentIdArr = commentIdDoc.map((val, index) => {
+            return val.commentId
+        })
+
+        // 2. comments_like的openId和user的openId做聚合查询,将user信息放到comments_like里
+        // 筛选条件是commentId在commentIdArr里的
+        let commentsData = await CommentsLikeModel.aggregate([{
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'commentId',
+                    foreignField: 'commentId',
+                    as: 'commentDetail'
+                }
+            },
+            {
+                $match: {
+                    commentId: {
+                        $in: commentIdArr
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    "commentId": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "commentDetail.content": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        commentsData = commentsData.map((val, index) => {
+            val.userDetail = val.userDetail[0]
+            val.content = val.commentDetail[0].content
+            delete val.commentDetail
+            return val
+        })
+
+
+        // 获取帖子点赞数据，步骤同评论
+        let invitationIdDoc = await InvitationsModel.find({
+            openId
+        })
+        let invitationIdArr = invitationIdDoc.map((val, index) => {
+            return val.invitationsId
+        })
+
+        let invitationData = await InvitationsLikeModel.aggregate([{
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'invitationsId',
+                    foreignField: 'invitationsId',
+                    as: 'invitationDetail'
+                }
+            },
+            {
+                $match: {
+                    invitationsId: {
+                        $in: invitationIdArr
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    "invitationsId": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "invitationDetail.title": 1,
+                    "invitationDetail.desc": 1,
+                    "invitationDetail.pic": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        invitationData = invitationData.map((val, index) => {
+            console.log(val.userDetail)
+            val.userDetail = val.userDetail[0]
+            val.invitationDetail = val.invitationDetail[0]
+            return val
+        })
+
+        let data = {
+            comment: commentsData,
+            post: invitationData
+        }
+        return data
     }
 }
 

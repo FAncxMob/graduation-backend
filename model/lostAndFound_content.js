@@ -14,13 +14,8 @@ let LostAndFoundContentSchema = mongoose.Schema({
         enum: [0, 1], // 0：丢东西  1：捡到东西
         default: 0,
     },
-    title: String,
-    desc: String,
-    contact: String,
-    createTime: {
-        type: Number,
-        index: true
-    }
+    contact: String
+
 })
 
 module.exports = mongoose.model('lostAndFound_content', LostAndFoundContentSchema, 'lostAndFound_content')

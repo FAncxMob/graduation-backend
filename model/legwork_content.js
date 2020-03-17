@@ -9,10 +9,7 @@ let LegworkContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    title: String,
     tag: String,
-    desc: String,
-    pic: String,
     price: {
         type: Number,
         default: 99999
@@ -36,10 +33,6 @@ let LegworkContentSchema = mongoose.Schema({
     verify: {
         type: String,
         default: '',
-        index: true
-    },
-    createTime: {
-        type: Number,
         index: true
     }
 

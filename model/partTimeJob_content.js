@@ -9,17 +9,11 @@ let PartTimeJobContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    title: String,
-    desc: String,
-    pic: String,
     price: String,
     workTime: String,
     workPlace: String,
-    contact: String,
-    createTime: {
-        type: Number,
-        index: true
-    }
+    contact: String
+
 })
 
 module.exports = mongoose.model('partTimeJob_content', PartTimeJobContentSchema, 'partTimeJob_content')

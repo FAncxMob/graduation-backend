@@ -3,7 +3,8 @@ let mongoose = require('./db.js')
 let CommentsSchema = mongoose.Schema({
     commentId: {
         type: String,
-        index: true
+        index: true,
+        unique: true
     },
     openId: {
         type: String,

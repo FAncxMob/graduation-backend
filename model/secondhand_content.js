@@ -9,10 +9,7 @@ let SecondhandContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    title: String,
     tag: String,
-    desc: String,
-    pic: String,
     buyPrice: Number,
     sellPrice: Number,
     deliveryWay: {
@@ -36,12 +33,7 @@ let SecondhandContentSchema = mongoose.Schema({
         type: String,
         default: '',
         index: true
-    },
-    createTime: {
-        type: Number,
-        index: true
     }
-
 })
 
 module.exports = mongoose.model('secondhand_content', SecondhandContentSchema, 'secondhand_content')
