@@ -37,17 +37,17 @@ let UserSchema = mongoose.Schema({
 UserSchema.statics.createUser = function (num, cb) {
     for (let index = 1; index <= num; index++) {
         let u = new this({
-            openId: `openId${index}`,
-            tel: `tel${index}`,
-            idCard: `idCard${index}`,
-            name: `name${index}`,
-            desc: `desc${index}`,
+            openId: `${index}`,
+            tel: `${index}`,
+            idCard: `${index}`,
+            name: `我是用户${index}的姓名啦`,
+            desc: `我是用户${index}的个性签名~`,
             school: '湖北经济学院',
             faculty: '信息与通信工程',
             major: '软件工程',
-            sno: `sno${index}`,
-            nickName: 'nickName',
-            avatar: 'avatarUrl'
+            sno: `${index}`,
+            nickName: `我是用户${index}的昵称啦`,
+            avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132'
 
         })
 

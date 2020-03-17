@@ -1,18 +1,8 @@
 let Koa = require('koa')
 let router = require('koa-router')()
 let app = new Koa()
-let {
-    getCommentsByIID,
-    getFollowsAndFansByUserId,
-    getInvitationsByClass,
-    getInvitationsByUserId,
-    getInvitationsByUserIdAndClass,
-    saveUserInfo,
-    isOurSchool,
-    haveUser,
-    getUserInfo,
-    updateUserInfo
-} = require('./util')
+
+let dbOperate = require('./util')
 
 var UserModel = require('./model/user')
 
@@ -20,32 +10,84 @@ var jwt = require('jsonwebtoken');
 let Fly = require("flyio/src/node")
 let fly = new Fly;
 
+const PWD = 'fcx'
+
 
 // UserModel.createUser(10, (err, doc) => {
 //     console.log(err, doc)
 // })
+var UserFollowModel = require('./model/user_follow')
+UserFollowModel.find()
 
-// 获取关注粉丝数据
-router.get('/updateUserInfo', async (ctx, next) => {
-    console.log('/updateUserInfo')
+
+// 关注某人
+router.get('/followingTa', async (ctx, next) => {
+    console.log('/followingTa')
     let code = 0
-    // 获取token和userInfo的值
-    let token = ctx.request.header.authorization
-    let data = ctx.query
-    try {
-        let result = jwt.verify(token, 'fcx')
+    let {
+        followId
+    } = ctx.query
 
-        let updateResult = await updateUserInfo(result.openid, data)
-        if (updateResult) {
-            code = 1
-            console.log('/updateUserInfo  更新成功了')
-        }
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.followingTa(openid, followId)
         ctx.body = {
-            code
+            code: 1
         }
 
     } catch {
-        console.log('/updateUserInfo  更新失败了！')
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 取消关注
+router.get('/cancelFollowing', async (ctx, next) => {
+    console.log('/cancelFollowing')
+    let code = 0
+    let {
+        cancelOpenId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.cancelFollowing(openid, cancelOpenId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 获取关注粉丝数据
+router.get('/getFollowingAndFollowerByOpenId', async (ctx, next) => {
+    console.log('/getFollowingAndFollowerByOpenId')
+    let code = 0
+    // 获取token和userInfo的值
+    let token = ctx.request.header.authorization
+    try {
+        let result = jwt.verify(token, PWD)
+
+        let data = await dbOperate.getFollowsAndFansByOpenId(result.openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
         ctx.body = {
             code: 0,
             message: 'token验证失败辽'
@@ -61,9 +103,9 @@ router.get('/updateUserInfo', async (ctx, next) => {
     let token = ctx.request.header.authorization
     let data = ctx.query
     try {
-        let result = jwt.verify(token, 'fcx')
+        let result = jwt.verify(token, PWD)
 
-        let updateResult = await updateUserInfo(result.openid, data)
+        let updateResult = await dbOperate.updateUserInfo(result.openid, data)
         if (updateResult) {
             code = 1
             console.log('/updateUserInfo  更新成功了')
@@ -89,8 +131,8 @@ router.get('/getUserInfo', async (ctx, next) => {
     let token = ctx.request.header.authorization
 
     try {
-        let result = jwt.verify(token, 'fcx')
-        let userInfo = await getUserInfo(result.openid)
+        let result = jwt.verify(token, PWD)
+        let userInfo = await dbOperate.getUserInfo(result.openid)
         ctx.body = {
             code: 1,
             userInfo
@@ -115,12 +157,12 @@ router.get('/login', async (ctx, next) => {
     let code = 0 // 用于表示认证是否成功，1：成功，0：失败
 
     try {
-        let result = jwt.verify(token, 'fcx')
+        let result = jwt.verify(token, PWD)
 
-        let isOurSchoolResult = await isOurSchool(data)
+        let isOurSchoolResult = await dbOperate.isOurSchool(data)
         if (isOurSchoolResult) {
             // 是我校人员才将openId写入数据库
-            await saveUserInfo(result.openid, data)
+            await dbOperate.saveUserInfo(result.openid, data)
             code = 1
         }
         ctx.body = {
@@ -143,8 +185,8 @@ router.get('/saveOpenId', async (ctx, next) => {
     let token = ctx.request.header.authorization
 
     try {
-        let result = jwt.verify(token, 'fcx')
-        let saveResult = await saveOrUpdateUserInfo(result.openid, userInfo)
+        let result = jwt.verify(token, PWD)
+        let saveResult = await dbOperate.saveOrUpdateUserInfo(result.openid, userInfo)
 
         ctx.body = saveResult
     } catch {
@@ -158,7 +200,7 @@ router.get('/testToken', (ctx, next) => {
     // 获取token 的值
     let token = ctx.request.header.authorization
     try {
-        let result = jwt.verify(token, 'fcx')
+        let result = jwt.verify(token, PWD)
         ctx.body = '验证成功'
     } catch {
         ctx.body = '验证失败'
@@ -179,11 +221,11 @@ router.get('/getOpenId', async (ctx, next) => {
     let result = await fly.get(url)
     userInfo = JSON.parse(result.data)
     // 判断是新用户还是老用户
-    let _haveUser = await haveUser(userInfo.openid)
+    let _haveUser = await dbOperate.haveUser(userInfo.openid)
 
     // 自定义登录状态，就是根据用户的openId和sessionKey进行加密生成token，返回给前端
     // d对openId和sessionKey进行加密,自定义登录状态
-    let token = jwt.sign(userInfo, 'fcx')
+    let token = jwt.sign(userInfo, PWD)
 
     // 3. 响应数据
     ctx.body = {
@@ -203,7 +245,7 @@ router.get('/getInvitationsByUserIdAndClass', async (ctx, next) => {
     let classify = +req.class
 
     // 2. 查询数据库获取数据
-    let result = await getInvitationsByUserIdAndClass(userId, classify)
+    let result = await dbOperate.getInvitationsByUserIdAndClass(userId, classify)
 
     // 3. 响应数据
     ctx.body = {
@@ -222,10 +264,10 @@ router.get('/getInvitationsByUserId', async (ctx, next) => {
     let userId = +req.userId
 
     // 2. 查询数据库获取数据
-    let legwork = await getInvitationsByUserIdAndClass(userId, 0)
-    let secondhand = await getInvitationsByUserIdAndClass(userId, 1)
-    let partTimeJob = await getInvitationsByUserIdAndClass(userId, 2)
-    let lostAndFound = await getInvitationsByUserIdAndClass(userId, 3)
+    let legwork = await dbOperate.getInvitationsByUserIdAndClass(userId, 0)
+    let secondhand = await dbOperate.getInvitationsByUserIdAndClass(userId, 1)
+    let partTimeJob = await dbOperate.getInvitationsByUserIdAndClass(userId, 2)
+    let lostAndFound = await dbOperate.getInvitationsByUserIdAndClass(userId, 3)
 
     let result = {
         userId,
