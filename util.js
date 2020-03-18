@@ -225,7 +225,7 @@ let dbOperate = {
     },
 
     // 根据帖子类别查询该类别的所有帖子(点赞，收藏，浏览数)
-    async getInvitationsByClass(classify) {
+    async getInvitationsByClass2(classify) {
         InvitationsModel.aggregate([{
                 $lookup: {
                     from: CLASS_TO_NAME[classify],
@@ -723,7 +723,7 @@ let dbOperate = {
                 $lookup: {
                     from: 'invitations_collect',
                     localField: 'openId',
-                    foreignField: 'collectOpenId',
+                    foreignField: 'postOpenId',
                     as: 'collectDetail'
                 }
             },
@@ -749,7 +749,6 @@ let dbOperate = {
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
                     "collectDetail": 1,
-                    // "collectDetail.createTime": 1,
 
                 }
             },
@@ -764,9 +763,6 @@ let dbOperate = {
             val.collectDetail = val.collectDetail[0]
             return val
         })
-
-
-
         return data
     },
 
@@ -776,6 +772,96 @@ let dbOperate = {
             openId,
             invitationsId: cancelInvitationsId
         })
+    },
+
+    // 根据类别获取帖子数据(不要详情数据)
+    async getInvitationsByClass(openId, classify) {
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    openId,
+                    classify
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: 'invitationsId',
+                    foreignField: 'invitationsId',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: 'invitationsId',
+                    foreignField: 'invitationsId',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: 'invitationsId',
+                    foreignField: 'invitationsId',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'invitationsId',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    "invitationsId": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+
+        return data
+    },
+
+    // 获取用户发布的所有帖子
+    async getAllOrder(openId) {
+        let legWork = await this.getInvitationsByClass(openId, 0)
+        let secondHand = await this.getInvitationsByClass(openId, 1)
+        let partTimeJob = await this.getInvitationsByClass(openId, 2)
+        let lostAndFound = await this.getInvitationsByClass(openId, 3)
+
+        let data = {
+            legWork,
+            secondHand,
+            partTimeJob,
+            lostAndFound
+        }
+
+        return data
     }
 }
 

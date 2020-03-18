@@ -16,6 +16,28 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 获取全部帖子，按类别分组
+router.get('/getAllOrder', async (ctx, next) => {
+    console.log('/getAllOrder')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getAllOrder(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 取消我收藏的某个帖子
 router.get('/cancelCollectPost', async (ctx, next) => {
     console.log('/cancelCollectPost')
@@ -38,6 +60,7 @@ router.get('/cancelCollectPost', async (ctx, next) => {
         }
     }
 })
+
 // 获取我收藏的帖子
 router.get('/getMyCollect', async (ctx, next) => {
     console.log('/getMyCollect')

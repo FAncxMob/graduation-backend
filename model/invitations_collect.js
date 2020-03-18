@@ -9,7 +9,7 @@ let InvitationsCollectSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    collectOpenId: {
+    postOpenId: {
         type: String,
         index: true
     },
