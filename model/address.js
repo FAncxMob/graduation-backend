@@ -26,7 +26,8 @@ let AddressSchema = mongoose.Schema({
         type: Number,
         enum: [0, 1], // 0：不是默认 1： 是默认
         default: 0,
-    }
+    },
+    tag: String
 })
 
 module.exports = mongoose.model('address', AddressSchema, 'address')

@@ -862,6 +862,17 @@ let dbOperate = {
         }
 
         return data
+    },
+
+    // 获取用户的所有地址
+    async getAddress(openId) {
+        let data = AddressModel.find({
+            openId
+        }, {
+            _id: 0,
+        })
+
+        return data
     }
 }
 

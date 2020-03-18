@@ -16,6 +16,28 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 获取地址
+router.get('/getAddress', async (ctx, next) => {
+    console.log('/getAddress')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getAddress(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取全部帖子，按类别分组
 router.get('/getAllOrder', async (ctx, next) => {
     console.log('/getAllOrder')
