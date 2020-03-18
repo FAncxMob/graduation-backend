@@ -10,10 +10,10 @@ let LegworkContentSchema = mongoose.Schema({
         index: true
     },
     tag: String,
-    price: {
-        type: Number,
-        default: 99999
-    },
+    // price: {
+    //     type: Number,
+    //     default: 99999
+    // },
     expectedTime: Number,
     addressId: {
         type: String,

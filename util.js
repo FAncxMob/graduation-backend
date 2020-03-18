@@ -30,7 +30,6 @@ let dbOperate = {
         let result = await UserModel.updateOne({
             openId
         }, data)
-        console.log(result)
         return result.n && result.ok ? true : false
     },
 
@@ -486,9 +485,7 @@ let dbOperate = {
 
     // 添加关注
     async followingTa(openId, followId) {
-        console.log(openId, followId, 'util.js')
         let time = Date.parse(new Date())
-        console.log(time)
         let n = new UserFollowModel({
             openId,
             followId: followId,
@@ -611,7 +608,6 @@ let dbOperate = {
         ])
 
         invitationData = invitationData.map((val, index) => {
-            console.log(val.userDetail)
             val.userDetail = val.userDetail[0]
             val.invitationDetail = val.invitationDetail[0]
             return val
@@ -622,6 +618,164 @@ let dbOperate = {
             post: invitationData
         }
         return data
+    },
+    // 获取回复我的数据
+    async getMyCommentReply(openId) {
+        let myCommentArr = await CommentsModel.find({
+            openId
+        }, {
+            _id: 0,
+            commentId: 1,
+            content: 1
+        })
+
+        let myCommentIdArr = []
+        myCommentArr.forEach((val, index) => {
+            myCommentIdArr.push(val.commentId)
+        })
+
+        let data = await CommentsModel.aggregate([{
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'replyId',
+                    foreignField: 'commentId',
+                    as: 'myCommentDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'pid',
+                    foreignField: 'commentId',
+                    as: 'fatherCommentDetail'
+                }
+            },
+            {
+                $match: {
+                    replyId: {
+                        $in: myCommentIdArr
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    "commentId": 1,
+                    "openId": 1, // 回复的人openId
+                    "createTime": 1,
+                    "pid": 1,
+                    "replyId": 1,
+                    "content": 1, // 回复的内容
+                    "userDetail.openId": 1, // 回复的人openId
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "myCommentDetail.content": 1, // 我的评论内容
+                    "fatherCommentDetail.content": 1 // 父级评论的内容
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.userDetail = val.userDetail[0]
+            val.myCommentDetail = val.myCommentDetail[0]
+            val.fatherCommentDetail = val.fatherCommentDetail[0]
+            return val
+        })
+
+
+        return data
+    },
+
+    // 获取我收藏的帖子
+    async getMyCollect(openId) {
+        // 获取我收藏的帖子的iid
+        let InvitationsIdArr = await InvitationsCollectModel.find({
+            openId
+        }, {
+            _id: 0,
+            invitationsId: 1
+        })
+        InvitationsIdArr = InvitationsIdArr.map((val, index) => {
+            return val.invitationsId
+        })
+        let data = await InvitationsModel.aggregate([{
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: 'openId',
+                    foreignField: 'collectOpenId',
+                    as: 'collectDetail'
+                }
+            },
+            {
+                $match: {
+                    invitationsId: {
+                        $in: InvitationsIdArr
+                    }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    "invitationsId": 1,
+                    "openId": 1,
+                    "classify": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "collectDetail": 1,
+                    // "collectDetail.createTime": 1,
+
+                }
+            },
+            {
+                $sort: {
+                    "collectDetail.createTime": -1
+                }
+            }
+        ])
+        data = data.map((val, index) => {
+            val.userDetail = val.userDetail[0]
+            val.collectDetail = val.collectDetail[0]
+            return val
+        })
+
+
+
+        return data
+    },
+
+    // 取消我收藏的某个帖子
+    async cancelCollectPost(openId, cancelInvitationsId) {
+        let result = await InvitationsCollectModel.remove({
+            openId,
+            invitationsId: cancelInvitationsId
+        })
     }
 }
 

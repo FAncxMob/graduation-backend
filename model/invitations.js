@@ -23,11 +23,15 @@ let InvitationsSchema = mongoose.Schema({
         }
     },
     desc: String,
-    pic: Array,
+    pic: {
+        type: Array,
+        default: []
+    },
     createTime: {
         type: Number,
         index: true
-    }
+    },
+    price: String
 
     // ,
 

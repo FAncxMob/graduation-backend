@@ -9,6 +9,10 @@ let InvitationsCollectSchema = mongoose.Schema({
         type: String,
         index: true
     },
+    collectOpenId: {
+        type: String,
+        index: true
+    },
     createTime: {
         type: Number,
         index: true

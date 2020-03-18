@@ -12,13 +12,77 @@ let fly = new Fly;
 
 const PWD = 'fcx'
 
-
 // UserModel.createUser(10, (err, doc) => {
 //     console.log(err, doc)
 // })
-var UserFollowModel = require('./model/user_follow')
-UserFollowModel.find()
 
+// 取消我收藏的某个帖子
+router.get('/cancelCollectPost', async (ctx, next) => {
+    console.log('/cancelCollectPost')
+    let code = 0
+    let cancelInvitationsId = ctx.query.cancelInvitationsId
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.cancelCollectPost(openid, cancelInvitationsId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我收藏的帖子
+router.get('/getMyCollect', async (ctx, next) => {
+    console.log('/getMyCollect')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getMyCollect(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取回复我的评论
+router.get('/getMyCommentReply', async (ctx, next) => {
+    console.log('/getMyCommentReply')
+    let code = 0
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getMyCommentReply(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取点赞数据
 router.get('/getLikeByOpenId', async (ctx, next) => {
     console.log('/getLikeByOpenId')

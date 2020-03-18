@@ -9,7 +9,7 @@ let PartTimeJobContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    price: String,
+    // price: String,
     workTime: String,
     workPlace: String,
     contact: String

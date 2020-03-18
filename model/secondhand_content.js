@@ -11,7 +11,7 @@ let SecondhandContentSchema = mongoose.Schema({
     },
     tag: String,
     buyPrice: Number,
-    sellPrice: Number,
+    // price: String,
     deliveryWay: {
         type: Number,
         enum: [0, 1, 2], // 0：都可以  1：自提，2：送货上门
