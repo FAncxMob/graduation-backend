@@ -1,10 +1,10 @@
 let mongoose = require('./db.js')
 
 let AddressSchema = mongoose.Schema({
-    addressId: {
-        type: String,
-        index: true
-    },
+    // addressId: {
+    //     type: String,
+    //     index: true
+    // },
     openId: {
         type: String,
         index: true // 索引

@@ -868,12 +868,53 @@ let dbOperate = {
     async getAddress(openId) {
         let data = AddressModel.find({
             openId
-        }, {
-            _id: 0,
+        }).sort({
+            'status': -1
         })
 
         return data
-    }
+    },
+    // 添加地址
+    async addAddress(openId, newAddress) {
+        let n = new AddressModel({
+            openId,
+            ...newAddress
+        })
+        await n.save()
+    },
+
+    // 获取用户的某个地址
+    async getAddressByAddressId(openId, addressId) {
+        let data = await AddressModel.find({
+            openId,
+            _id: addressId
+        })
+        data = data[0]
+        return data
+
+    },
+    // 修改地址
+    async editAddress(openId, data) {
+        if (data.status) {
+            // 将该人的其他的地址的status设为0
+            let result = await AddressModel.update({
+                openId,
+                status: 1
+            }, {
+                status: 0
+            })
+        }
+        // 修改当前这个
+        let result2 = await AddressModel.update({
+            _id: data._id
+        }, {
+            name: data.name,
+            tel: data.tel,
+            location: data.location,
+            tag: data.tag,
+            status: data.status
+        })
+    },
 }
 
 module.exports = dbOperate

@@ -16,6 +16,73 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 修改地址
+router.get('/editAddress', async (ctx, next) => {
+    console.log('/editAddress')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.editAddress(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取地址的详细信息
+router.get('/getAddressByAddressId', async (ctx, next) => {
+    console.log('/getAddressByAddressId')
+    let code = 0
+    let addressId = ctx.query.addressId
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getAddressByAddressId(openid, addressId)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 添加地址
+router.get('/addAddress', async (ctx, next) => {
+    console.log('/addAddress')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.addAddress(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取地址
 router.get('/getAddress', async (ctx, next) => {
     console.log('/getAddress')
