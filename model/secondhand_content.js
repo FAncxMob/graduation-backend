@@ -2,7 +2,7 @@ let mongoose = require('./db.js')
 
 let SecondhandContentSchema = mongoose.Schema({
     iid: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     openId: {

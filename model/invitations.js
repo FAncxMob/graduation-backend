@@ -1,11 +1,6 @@
 let mongoose = require('./db.js')
 
 let InvitationsSchema = mongoose.Schema({
-    invitationsId: {
-        type: String,
-        index: true,
-        unique: true
-    },
     openId: {
         type: String,
         index: true

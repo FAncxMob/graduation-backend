@@ -1,25 +1,21 @@
 let mongoose = require('./db.js')
-
+// 如果是直接对帖子进行回复 则replyCommentId和parentCommentId都是
+// 5e73a4fc3793ae3a44a97e52
 let CommentsSchema = mongoose.Schema({
-    commentId: {
-        type: String,
-        index: true,
-        unique: true
-    },
     openId: {
         type: String,
         index: true
     },
     iid: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
-    replyId: {
-        type: String,
+    replyCommentId: {
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
-    pid: {
-        type: String,
+    parentCommentId: {
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     content: String,

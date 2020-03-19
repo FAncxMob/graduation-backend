@@ -20,7 +20,7 @@ var StudentModel = require('./model/student')
 
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
 
-
+let mongoose = require('mongoose')
 
 
 
@@ -88,7 +88,7 @@ let dbOperate = {
         let doc = await InvitationsModel.aggregate([{
                 $lookup: {
                     from: CLASS_TO_NAME[classify],
-                    localField: 'invitationsId',
+                    localField: '_id',
                     foreignField: 'iid',
                     as: "detail"
                 },
@@ -96,24 +96,24 @@ let dbOperate = {
             {
                 $lookup: {
                     from: 'invitations_like',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'like'
                 },
             },
             {
                 $lookup: {
                     from: 'invitations_watch',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'watch'
                 },
             },
             {
                 $lookup: {
                     from: 'invitations_collect',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'collect'
                 },
             },
@@ -224,91 +224,6 @@ let dbOperate = {
 
     },
 
-    // 根据帖子类别查询该类别的所有帖子(点赞，收藏，浏览数)
-    async getInvitationsByClass2(classify) {
-        InvitationsModel.aggregate([{
-                $lookup: {
-                    from: CLASS_TO_NAME[classify],
-                    localField: 'invitationsId',
-                    foreignField: 'iid',
-                    as: 'details'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'user',
-                    localField: 'uid',
-                    foreignField: 'userId',
-                    as: 'userData'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_like',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
-                    as: 'like'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_watch',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
-                    as: 'watch'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_collect',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
-                    as: 'collect'
-                },
-            },
-            {
-                $project: {
-                    "_id": 0,
-                    "classify": 1,
-                    "invitationsId": 1,
-                    "details": 1,
-                    "like": 1,
-                    "watch": 1,
-                    "collect": 1,
-                    "userData.userId": 1,
-                    "userData.nickName": 1,
-                    "userData.avatar": 1,
-                    "userData.desc": 1
-                }
-            },
-            {
-                $sort: {
-                    "details.createTime": -1
-                }
-            },
-            {
-                $match: {
-                    "classify": classify
-                }
-            }
-
-        ], (err, doc) => {
-            if (err) {
-                console.log(err)
-                return
-            }
-            doc.forEach((val, index) => {
-                val.like = val.like.length
-                val.collect = val.collect.length
-                val.watch = val.watch.length
-            })
-            console.log(JSON.stringify(doc), '帖子结果')
-
-        })
-
-
-    },
-
     // 根据帖子ID查询评论（点赞个数和楼中楼）
     async getCommentsByIID(iid) {
 
@@ -333,8 +248,8 @@ let dbOperate = {
                     "likes": 1,
                     "iid": 1,
                     "_id": 0,
-                    "replyId": 1,
-                    "pid": 1,
+                    "replyCommentId": 1,
+                    "parentCommentId": 1,
                     "commentId": 1,
                     "content": 1,
                     "createTime": 1,
@@ -368,7 +283,7 @@ let dbOperate = {
                 delete val.likes
                 val.likesNum = likeNum
 
-                if (val.replyId === 0 && val.pid === 0) { // 直接对文章发表评论
+                if (val.replyCommentId === 0 && val.parentCommentId === 0) { // 直接对文章发表评论
                     data.push({
                         ...val,
                         reply: []
@@ -378,7 +293,7 @@ let dbOperate = {
             })
             doc.forEach((val, index) => { // 对评论的评论
                 data.forEach(v => {
-                    if (v.commentId === val.pid) {
+                    if (v.commentId === val.parentCommentId) {
                         v.reply.push(val)
                         return
                     }
@@ -503,7 +418,7 @@ let dbOperate = {
             openId
         })
         let commentIdArr = commentIdDoc.map((val, index) => {
-            return val.commentId
+            return val._id
         })
 
         // 2. comments_like的openId和user的openId做聚合查询,将user信息放到comments_like里
@@ -520,7 +435,7 @@ let dbOperate = {
                 $lookup: {
                     from: 'comments',
                     localField: 'commentId',
-                    foreignField: 'commentId',
+                    foreignField: '_id',
                     as: 'commentDetail'
                 }
             },
@@ -562,7 +477,7 @@ let dbOperate = {
             openId
         })
         let invitationIdArr = invitationIdDoc.map((val, index) => {
-            return val.invitationsId
+            return val._id
         })
 
         let invitationData = await InvitationsLikeModel.aggregate([{
@@ -575,14 +490,14 @@ let dbOperate = {
             }, {
                 $lookup: {
                     from: 'invitations',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: 'iid',
+                    foreignField: '_id',
                     as: 'invitationDetail'
                 }
             },
             {
                 $match: {
-                    invitationsId: {
+                    iid: {
                         $in: invitationIdArr
                     }
                 }
@@ -590,7 +505,7 @@ let dbOperate = {
             {
                 $project: {
                     _id: 0,
-                    "invitationsId": 1,
+                    "iid": 1,
                     "createTime": 1,
                     "userDetail.openId": 1,
                     "userDetail.avatar": 1,
@@ -624,15 +539,13 @@ let dbOperate = {
         let myCommentArr = await CommentsModel.find({
             openId
         }, {
-            _id: 0,
-            commentId: 1,
-            content: 1
+            _id: 1
         })
 
-        let myCommentIdArr = []
-        myCommentArr.forEach((val, index) => {
-            myCommentIdArr.push(val.commentId)
+        myCommentArr = myCommentArr.map((val, index) => {
+            return val._id
         })
+
 
         let data = await CommentsModel.aggregate([{
                 $lookup: {
@@ -645,34 +558,33 @@ let dbOperate = {
             {
                 $lookup: {
                     from: 'comments',
-                    localField: 'replyId',
-                    foreignField: 'commentId',
+                    localField: 'replyCommentId',
+                    foreignField: '_id',
                     as: 'myCommentDetail'
                 }
             },
             {
                 $lookup: {
                     from: 'comments',
-                    localField: 'pid',
-                    foreignField: 'commentId',
+                    localField: 'parentCommentId',
+                    foreignField: '_id',
                     as: 'fatherCommentDetail'
                 }
             },
             {
                 $match: {
-                    replyId: {
-                        $in: myCommentIdArr
+                    replyCommentId: {
+                        $in: myCommentArr
                     }
                 }
             },
             {
                 $project: {
-                    _id: 0,
-                    "commentId": 1,
+                    "_id": 1,
                     "openId": 1, // 回复的人openId
                     "createTime": 1,
-                    "pid": 1,
-                    "replyId": 1,
+                    "parentCommentId": 1,
+                    "replyCommentId": 1,
                     "content": 1, // 回复的内容
                     "userDetail.openId": 1, // 回复的人openId
                     "userDetail.avatar": 1,
@@ -701,76 +613,104 @@ let dbOperate = {
 
     // 获取我收藏的帖子
     async getMyCollect(openId) {
-        // 获取我收藏的帖子的iid
-        let InvitationsIdArr = await InvitationsCollectModel.find({
-            openId
-        }, {
-            _id: 0,
-            invitationsId: 1
-        })
-        InvitationsIdArr = InvitationsIdArr.map((val, index) => {
-            return val.invitationsId
-        })
-        let data = await InvitationsModel.aggregate([{
+        let data = await InvitationsCollectModel.aggregate([{
+                $match: {
+                    openId
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            }, {
                 $lookup: {
                     from: 'user',
-                    localField: 'openId',
+                    localField: 'postOpenId',
                     foreignField: 'openId',
                     as: 'userDetail'
                 }
-            },
-            {
+            }, {
                 $lookup: {
                     from: 'invitations_collect',
-                    localField: 'openId',
-                    foreignField: 'postOpenId',
-                    as: 'collectDetail'
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'collect'
                 }
             },
             {
-                $match: {
-                    invitationsId: {
-                        $in: InvitationsIdArr
-                    }
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'comments'
                 }
             },
             {
                 $project: {
-                    _id: 0,
-                    "invitationsId": 1,
-                    "openId": 1,
-                    "classify": 1,
-                    "title": 1,
-                    "desc": 1,
-                    "pic": 1,
-                    "price": 1,
-                    "createTime": 1,
-                    "userDetail.openId": 1,
+                    "_id": 0,
+                    iid: 1,
+                    openId: 1,
+                    createTime: 1,
+                    postOpenId: 1,
+                    "invitationsDetail.openId": 1,
+                    "invitationsDetail.title": 1,
+                    "invitationsDetail.desc": 1,
+                    "invitationsDetail.createTime": 1,
+                    "invitationsDetail.pic": 1,
+                    "invitationsDetail.price": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
-                    "collectDetail": 1,
-
+                    "userDetail.desc": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
                 }
             },
             {
                 $sort: {
-                    "collectDetail.createTime": -1
+                    "createTime": -1
                 }
             }
         ])
+
         data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
             val.userDetail = val.userDetail[0]
-            val.collectDetail = val.collectDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
             return val
         })
+
         return data
     },
 
     // 取消我收藏的某个帖子
     async cancelCollectPost(openId, cancelInvitationsId) {
+        let _iid = mongoose.Types.ObjectId(cancelInvitationsId)
         let result = await InvitationsCollectModel.remove({
             openId,
-            invitationsId: cancelInvitationsId
+            iid: _iid
         })
     },
 
@@ -784,44 +724,44 @@ let dbOperate = {
             }, {
                 $lookup: {
                     from: 'invitations_collect',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'collect'
                 }
             },
             {
                 $lookup: {
                     from: 'invitations_like',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'like'
                 }
             },
             {
                 $lookup: {
                     from: 'invitations_watch',
-                    localField: 'invitationsId',
-                    foreignField: 'invitationsId',
+                    localField: '_id',
+                    foreignField: 'iid',
                     as: 'watch'
                 }
             },
             {
                 $lookup: {
                     from: 'comments',
-                    localField: 'invitationsId',
+                    localField: '_id',
                     foreignField: 'iid',
                     as: 'comments'
                 }
             },
             {
                 $project: {
-                    _id: 0,
-                    "invitationsId": 1,
+                    "_id": 1,
                     "openId": 1,
                     "title": 1,
                     "desc": 1,
                     "pic": 1,
                     "price": 1,
+                    "classify": 1,
                     "createTime": 1,
                     "collect": 1,
                     "like": 1,
@@ -847,8 +787,8 @@ let dbOperate = {
         return data
     },
 
-    // 获取用户发布的所有帖子
-    async getAllOrder(openId) {
+    // 获取我发布的所有帖子
+    async getAllPublish(openId) {
         let legWork = await this.getInvitationsByClass(openId, 0)
         let secondHand = await this.getInvitationsByClass(openId, 1)
         let partTimeJob = await this.getInvitationsByClass(openId, 2)
@@ -914,6 +854,102 @@ let dbOperate = {
             tag: data.tag,
             status: data.status
         })
+    },
+
+    // 获取我观看的帖子
+    async getHistory(openId) {
+
+        let data = await InvitationsWatchModel.aggregate([{
+                $match: {
+                    openId
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'user',
+                    localField: 'postOpenId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $project: {
+                    "_id": 0,
+                    iid: 1,
+                    openId: 1,
+                    createTime: 1,
+                    postOpenId: 1,
+                    "invitationsDetail.openId": 1,
+                    "invitationsDetail.title": 1,
+                    "invitationsDetail.desc": 1,
+                    "invitationsDetail.createTime": 1,
+                    "invitationsDetail.pic": 1,
+                    "invitationsDetail.price": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "userDetail.desc": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+
+        data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
+            val.userDetail = val.userDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+
+        return data
     },
 }
 

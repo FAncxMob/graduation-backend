@@ -16,6 +16,28 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 获取历史记录
+router.get('/getHistory', async (ctx, next) => {
+    console.log('/getHistory')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getHistory(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 修改地址
 router.get('/editAddress', async (ctx, next) => {
     console.log('/editAddress')
@@ -106,15 +128,15 @@ router.get('/getAddress', async (ctx, next) => {
     }
 })
 // 获取全部帖子，按类别分组
-router.get('/getAllOrder', async (ctx, next) => {
-    console.log('/getAllOrder')
+router.get('/getAllPublish', async (ctx, next) => {
+    console.log('/getAllPublish')
     let code = 0
     let token = ctx.request.header.authorization
     try {
         let {
             openid
         } = jwt.verify(token, PWD)
-        let data = await dbOperate.getAllOrder(openid)
+        let data = await dbOperate.getAllPublish(openid)
         ctx.body = {
             code: 1,
             data
@@ -137,7 +159,7 @@ router.get('/cancelCollectPost', async (ctx, next) => {
         let {
             openid
         } = jwt.verify(token, PWD)
-        let data = await dbOperate.cancelCollectPost(openid, cancelInvitationsId)
+        await dbOperate.cancelCollectPost(openid, cancelInvitationsId)
         ctx.body = {
             code: 1
         }

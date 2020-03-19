@@ -2,7 +2,7 @@ let mongoose = require('./db.js')
 
 let PartTimeJobContentSchema = mongoose.Schema({
     iid: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     openId: {

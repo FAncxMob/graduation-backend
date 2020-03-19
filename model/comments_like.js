@@ -6,11 +6,15 @@ let CommentsLikeSchema = mongoose.Schema({
         index: true
     },
     commentId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     createTime: {
         type: Number,
+        index: true
+    },
+    postOpenId: {
+        type: String,
         index: true
     }
 })
