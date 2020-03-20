@@ -714,12 +714,20 @@ let dbOperate = {
         })
     },
 
-    // 根据类别获取帖子数据(不要详情数据)
-    async getInvitationsByClass(openId, classify) {
+    // 根据某用户某类别获取帖子数据(不要详情数据)
+    async getMyInvitationsByClass(openId, classify) {
+        let classifyArr = []
+        if (classify == 3) {
+            classifyArr = [3, 5]
+        } else {
+            classifyArr = [classify]
+        }
         let data = await InvitationsModel.aggregate([{
                 $match: {
                     openId,
-                    classify
+                    classify: {
+                        $in: classifyArr
+                    }
                 }
             }, {
                 $lookup: {
@@ -789,10 +797,10 @@ let dbOperate = {
 
     // 获取我发布的所有帖子
     async getAllPublish(openId) {
-        let legWork = await this.getInvitationsByClass(openId, 0)
-        let secondHand = await this.getInvitationsByClass(openId, 1)
-        let partTimeJob = await this.getInvitationsByClass(openId, 2)
-        let lostAndFound = await this.getInvitationsByClass(openId, 3)
+        let legWork = await this.getMyInvitationsByClass(openId, 0)
+        let secondHand = await this.getMyInvitationsByClass(openId, 1)
+        let partTimeJob = await this.getMyInvitationsByClass(openId, 2)
+        let lostAndFound = await this.getMyInvitationsByClass(openId, 3)
 
         let data = {
             legWork,
@@ -855,6 +863,78 @@ let dbOperate = {
             status: data.status
         })
     },
+
+    // // 根据某类别全部帖子数据(不要用户数据和详情数据)
+    // async getAllInvitationsByClass(classify) {
+    //     let data = await InvitationsModel.aggregate([{
+    //             $match: {
+    //                 classify
+    //             }
+    //         }, {
+    //             $lookup: {
+    //                 from: 'invitations_collect',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'collect'
+    //             }
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'invitations_like',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'like'
+    //             }
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'invitations_watch',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'watch'
+    //             }
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'comments',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'comments'
+    //             }
+    //         },
+    //         {
+    //             $project: {
+    //                 "_id": 1,
+    //                 "openId": 1,
+    //                 "title": 1,
+    //                 "desc": 1,
+    //                 "pic": 1,
+    //                 "price": 1,
+    //                 "classify": 1,
+    //                 "createTime": 1,
+    //                 "collect": 1,
+    //                 "like": 1,
+    //                 "watch": 1,
+    //                 "comments": 1
+    //             }
+    //         },
+    //         {
+    //             $sort: {
+    //                 "createTime": -1
+    //             }
+    //         }
+    //     ])
+
+    //     data = data.map((val, index) => {
+    //         val.like = val.like.length
+    //         val.collect = val.collect.length
+    //         val.watch = val.watch.length
+    //         val.comments = val.comments.length
+    //         return val
+    //     })
+
+    //     return data
+    // },
 
     // 获取我观看的帖子
     async getHistory(openId) {
@@ -951,6 +1031,314 @@ let dbOperate = {
 
         return data
     },
+    // 获取校园热点文章
+    async getSchoolNews() {
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify: 4
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            // {
+            //     $lookup: {
+            //         from: 'invitations_like',
+            //         localField: '_id',
+            //         foreignField: 'iid',
+            //         as: 'like'
+            //     }
+            // },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            }, {
+                $lookup: {
+                    from: 'schoolNews_content',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'detail'
+                }
+            },
+            // {
+            //     $lookup: {
+            //         from: 'comments',
+            //         localField: '_id',
+            //         foreignField: 'iid',
+            //         as: 'comments'
+            //     }
+            // },
+            {
+                $project: {
+                    "_id": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    // "like": 1,
+                    "watch": 1,
+                    "detail": 1,
+                    // "comments": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            // val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.detail = val.detail[0]
+            // val.comments = val.comments.length
+            return val
+        })
+
+        return data
+    },
+
+
+    // 根据某用户某类别获取帖子数据(不要详情数据)
+    async getInvitationsByClass(classify) {
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            val.userDetail = val.userDetail[0]
+            return val
+        })
+
+        // if (classify === 3) {
+        //     let _data = {
+        //         lost: [],
+        //         found: []
+        //     }
+        //     data.forEach((val, index) => {
+        //         if (val.status === 8) {
+        //             // 丢东西
+        //             _data.lost.push(val)
+        //         } else if (val.status === 9) {
+        //             // 捡东西
+        //             _data.found.push(val)
+        //         }
+        //     })
+        //     data = _data
+        // }
+
+        return data
+    },
+
+    // 获取所有帖子
+    async getAllPost() {
+        let legWork = await this.getInvitationsByClass(0)
+        let secondHand = await this.getInvitationsByClass(1)
+        let partTimeJob = await this.getInvitationsByClass(2)
+        let lost = await this.getInvitationsByClass(3)
+        let found = await this.getInvitationsByClass(5)
+        let data = {
+            legWork,
+            secondHand,
+            partTimeJob,
+            lost,
+            found
+        }
+        return data
+    },
+    // 查询帖子
+    async searchInIndexPage(searchStr, classify) {
+        // 注意类型，classify传进来是string类型的
+        console.log(searchStr, classify)
+        let data = InvitationsModel.aggregate([{
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                }
+            },
+            {
+                $match: {
+                    classify: +classify,
+                    $or: [ //多条件，数组
+                        {
+                            title: {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            desc: {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+
+        // data = data.map((val, index) => {
+
+        //     // val.like = val.like.length
+        //     // val.collect = val.collect.length
+        //     // val.watch = val.watch.length
+        //     // val.comments = val.comments.length
+        //     // val.userDetail = val.userDetail[0]
+        //     return val
+        // })
+
+        // let data = {
+        //     result,
+        //     classify: str
+        // }
+
+        return data
+    },
+
+
 }
 
 module.exports = dbOperate

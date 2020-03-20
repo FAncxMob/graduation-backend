@@ -16,6 +16,112 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 搜索帖子
+router.get('/searchInIndexPage', async (ctx, next) => {
+    console.log('/searchInIndexPage')
+    let code = 0
+    let {
+        searchStr,
+        classify
+    } = ctx.query
+    let str = ''
+    switch (classify) {
+        case '0':
+            str = 'legWork'
+            break;
+        case '1':
+            str = 'secondHand'
+            break;
+        case '2':
+            str = 'partTimeJob'
+            break;
+        case '3':
+            str = 'lost'
+            break;
+        case '5':
+            str = 'found'
+            break;
+        default:
+            break;
+    }
+
+
+
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchInIndexPage(searchStr, classify)
+
+        data = data.map((val, index) => {
+
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            val.userDetail = val.userDetail[0]
+            return val
+        })
+        console.log(data, 'app.js')
+        ctx.body = {
+            code: 1,
+            data,
+            str
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取全部的帖子，按类别分组
+router.get('/getAllPost', async (ctx, next) => {
+    console.log('/getAllPost')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getAllPost()
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取校园热点新闻
+router.get('/getSchoolNews', async (ctx, next) => {
+    console.log('/getSchoolNews')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getSchoolNews()
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取历史记录
 router.get('/getHistory', async (ctx, next) => {
     console.log('/getHistory')
@@ -127,7 +233,7 @@ router.get('/getAddress', async (ctx, next) => {
         }
     }
 })
-// 获取全部帖子，按类别分组
+// 获取我发布的全部帖子，按类别分组
 router.get('/getAllPublish', async (ctx, next) => {
     console.log('/getAllPublish')
     let code = 0

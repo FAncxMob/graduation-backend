@@ -24,12 +24,7 @@ let LegworkContentSchema = mongoose.Schema({
         index: true,
         default: 0
     },
-    status: {
-        type: Number,
-        default: 0,
-        enum: [0, 1, 2, 3, 4], // 1：已接单，2：待核销，3：完成，4：中止
-        index: true
-    },
+
     verify: {
         type: String,
         default: '',
