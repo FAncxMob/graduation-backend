@@ -228,12 +228,12 @@ let dbOperate = {
     // },
 
     // 根据帖子ID查询评论（点赞个数和楼中楼）
-    async getCommentsByIID(iid) {
+    async getCommentsByIID(iid, openId) {
         iid = mongoose.Types.ObjectId(iid)
         let comments = await CommentsModel.aggregate([{
                 $lookup: {
                     from: 'comments_like',
-                    localField: 'iid',
+                    localField: '_id',
                     foreignField: 'commentId',
                     as: 'likes'
                 },
@@ -288,6 +288,13 @@ let dbOperate = {
 
         let data = [] // 最后的数据
         comments = comments.map((val, index) => {
+            // val.likes = val.likes.length
+            val.likes.map((v, i) => {
+                if (v.openId === openId) {
+                    // 我赞过这条评论
+                    val.iLikeThis = true
+                }
+            })
             val.likes = val.likes.length
             val.userDetail = val.userDetail[0]
             return val
@@ -1379,18 +1386,16 @@ let dbOperate = {
 
         let _id = mongoose.Types.ObjectId(iid)
 
-        let h = await InvitationsModel.aggregate([
-            {
-                $match: {
-                    _id: _id
-                }
+        let h = await InvitationsModel.aggregate([{
+            $match: {
+                _id: _id
             }
-        ])
+        }])
         let classify = h[0].classify
         // 获取帖子详情
         let tableName = this.changeClassifyToStr(+classify)
 
-       
+
 
         let detail = await InvitationsModel.aggregate([{
                 $match: {
@@ -1508,12 +1513,23 @@ let dbOperate = {
 
 
         // 获取帖子留言
-        let commentDetail = await this.getCommentsByIID(_id)
+        let commentDetail = await this.getCommentsByIID(_id, openId)
+
+
+        // 是否关注了 发帖人
+        let isFollowing = await UserFollowModel.aggregate([{
+            $match: {
+                openId,
+                followId: detail.openId
+            }
+        }])
 
 
         let data = {
             detail,
-            commentDetail
+            commentDetail,
+            isFollowing: isFollowing.length,
+            openId
         }
 
         return data
