@@ -27,7 +27,12 @@ let UserSchema = mongoose.Schema({
     //     default: 1,
     //     enum: [1, 2], // 1：男，2：女
     // },
-    avatar: String
+    avatar: String,
+    createTime: {
+        type: Number,
+        index: true,
+        default: Date.now()
+    },
 
 })
 
@@ -48,7 +53,6 @@ UserSchema.statics.createUser = function (num, cb) {
             sno: `${index}`,
             nickName: `我是用户${index}的昵称啦`,
             avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132'
-
         })
 
         u.save(function (err, doc) {

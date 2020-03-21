@@ -21,8 +21,9 @@ let CommentsSchema = mongoose.Schema({
     content: String,
     createTime: {
         type: Number,
-        index: true
-    }
+        index: true,
+        default: Date.now()
+    },
 })
 
 module.exports = mongoose.model('comments', CommentsSchema, 'comments')

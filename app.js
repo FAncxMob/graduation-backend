@@ -16,6 +16,35 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 获取主页帖子详情,并且将该openid访问该iid插入到帖子—_watch这个关联表
+router.get('/getPostDetail', async (ctx, next) => {
+    console.log('/getPostDetail')
+    let code = 0
+    let {
+        iid,
+        classify
+    } = ctx.query
+
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getPostDetailAndAddWatchPost(openid, iid, classify)
+
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 搜索帖子
 router.get('/searchInIndexPage', async (ctx, next) => {
     console.log('/searchInIndexPage')
@@ -64,7 +93,6 @@ router.get('/searchInIndexPage', async (ctx, next) => {
             val.userDetail = val.userDetail[0]
             return val
         })
-        console.log(data, 'app.js')
         ctx.body = {
             code: 1,
             data,
@@ -78,6 +106,8 @@ router.get('/searchInIndexPage', async (ctx, next) => {
         }
     }
 })
+
+
 // 获取全部的帖子，按类别分组
 router.get('/getAllPost', async (ctx, next) => {
     console.log('/getAllPost')

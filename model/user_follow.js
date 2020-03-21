@@ -11,8 +11,9 @@ let UserFollowSchema = mongoose.Schema({
     },
     createTime: {
         type: Number,
-        index: true
-    }
+        index: true,
+        default: Date.now()
+    },
 })
 
 

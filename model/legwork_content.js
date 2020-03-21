@@ -14,7 +14,11 @@ let LegworkContentSchema = mongoose.Schema({
     //     type: Number,
     //     default: 99999
     // },
-    expectedTime: Number,
+    expectedTime: {
+        type: Number,
+        index: true,
+        default: Date.now()
+    },
     addressId: {
         type: String,
         index: true
@@ -29,7 +33,13 @@ let LegworkContentSchema = mongoose.Schema({
         type: String,
         default: '',
         index: true
-    }
+    },
+    status: {
+        type: Number,
+        default: 0,
+        enum: [0, 1, 2, 3, 4], // 1：已接单，2：待核销，3：完成，4：中止
+        index: true
+    },
 
 })
 

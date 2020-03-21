@@ -1338,6 +1338,235 @@ let dbOperate = {
         return data
     },
 
+    /**
+     * 
+     * @param {用户openId} openId 
+     * @param {帖子的唯一表示} iid
+     * 
+     * 1. 帖子表关联帖子详情表，获取该帖子的
+     * （帖子信息以及帖子详情信息，喜欢，浏览，点赞，留言数，发帖人用户信息）
+     * 2. 存储该用户的观看记录到invitations_watch
+     */
+    async getPostDetailAndAddWatchPost(openId, iid, classify) {
+
+        let tableName = this.changeClassifyToStr(+classify)
+        console.log(tableName)
+        let _id = mongoose.Types.ObjectId(iid)
+        let detail = await InvitationsModel.aggregate([{
+                $match: {
+                    _id: _id
+                }
+            },
+            {
+                $lookup: {
+                    from: `${tableName}_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'invitationsDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1,
+                    "createTime": 1,
+                    "invitationsDetail": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "userDetail.createTime": 1
+                }
+            }
+            // ,
+            // {
+            //     $sort: {
+            //         "createTime": -1
+            //     }
+            // }
+        ])
+        detail = detail[0]
+        detail.invitationsDetail = detail.invitationsDetail[0]
+        detail.userDetail = detail.userDetail[0]
+        detail.collect = detail.collect.length
+        detail.like = detail.like.length
+        detail.watch = detail.watch.length
+        detail.comments = detail.comments.length
+        let num = await this.completedOrder(openId, classify)
+        detail.userDetail.completedOrderNum = num
+
+
+        // 判断如果该用户已经浏览过该帖子 则只更改浏览时间为当前时间
+        let doc = await InvitationsWatchModel.find({
+            iid: _id,
+            openId
+        })
+        if (doc.length == 0) {
+            console.log('增加')
+            let n = new InvitationsWatchModel({
+                iid: _id,
+                openId: openId,
+                postOpenId: detail.openId
+            })
+            await n.save()
+        } else {
+            console.log('修改')
+            await InvitationsWatchModel.updateOne({
+                iid: _id,
+                openId
+            }, {
+                createTime: Date.now()
+            })
+        }
+
+        return detail
+
+
+    },
+
+    // 将类型转换为关联表的表名：
+    changeClassifyToStr(classify) {
+        let str = ''
+        switch (classify) {
+            case 0:
+                str = 'legwork'
+                break;
+            case 1:
+                str = 'secondhand'
+                break;
+            case 2:
+                str = 'partTimeJob'
+                break;
+            case 3:
+                str = 'lostAndFound'
+                break;
+            case 5:
+                str = 'lostAndFound'
+                break;
+            case 4:
+                str = 'schoolNews'
+                break;
+            default:
+                break;
+        }
+        return str
+    },
+
+    // 根据openId查询该用户完成了多少类别为classify的帖子
+    async completedOrder(openId, classify) {
+        let completedOrder
+        if (classify == 0) {
+            let result = await LegworkContentModel.aggregate([{
+                    $match: {
+                        $or: [{
+                                takerId: openId,
+                            },
+                            {
+                                openId: openId,
+                            }
+                        ],
+                        status: 3
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+
+                    }
+                }
+                // ,
+                // {
+                //     $sort: {
+                //         "createTime": -1
+                //     }
+                // }
+            ])
+            completedOrder = result.length
+        } else if (classify == 1) {
+            let result = await SecondhandContentModel.aggregate([{
+                    $match: {
+                        $or: [{
+                                takerId: openId,
+                            },
+                            {
+                                openId: openId,
+                            }
+                        ],
+                        status: 3
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+
+                    }
+                }
+                // ,
+                // {
+                //     $sort: {
+                //         "createTime": -1
+                //     }
+                // }
+            ])
+            completedOrder = result.length
+        }
+
+        return completedOrder
+
+
+    },
+
+
 
 }
 

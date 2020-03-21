@@ -11,7 +11,8 @@ let InvitationsWatchSchema = mongoose.Schema({
     },
     createTime: {
         type: Number,
-        index: true
+        index: true,
+        default: Date.now()
     },
     postOpenId: {
         type: String,
