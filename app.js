@@ -21,8 +21,7 @@ router.get('/getPostDetail', async (ctx, next) => {
     console.log('/getPostDetail')
     let code = 0
     let {
-        iid,
-        classify
+        iid
     } = ctx.query
 
 
@@ -31,7 +30,7 @@ router.get('/getPostDetail', async (ctx, next) => {
         let {
             openid
         } = jwt.verify(token, PWD)
-        let data = await dbOperate.getPostDetailAndAddWatchPost(openid, iid, classify)
+        let data = await dbOperate.getPostDetailAndAddWatchPost(openid, iid)
 
         ctx.body = {
             code: 1,

@@ -17,10 +17,13 @@ var CommentsLikeModel = require('./model/comments_like')
 var AddressModel = require('./model/address')
 
 var StudentModel = require('./model/student')
+let mongoose = require('mongoose')
 
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
+let THE_COMMENTS_ID = '5e73a4fc3793ae3a44a97e52'
 
-let mongoose = require('mongoose')
+
+
 
 
 
@@ -84,153 +87,153 @@ let dbOperate = {
     },
 
     // 根据userId和类别 查所有的帖子(点赞，收藏，浏览数)
-    async getInvitationsByUserIdAndClass(userId, classify) {
-        let doc = await InvitationsModel.aggregate([{
-                $lookup: {
-                    from: CLASS_TO_NAME[classify],
-                    localField: '_id',
-                    foreignField: 'iid',
-                    as: "detail"
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_like',
-                    localField: '_id',
-                    foreignField: 'iid',
-                    as: 'like'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_watch',
-                    localField: '_id',
-                    foreignField: 'iid',
-                    as: 'watch'
-                },
-            },
-            {
-                $lookup: {
-                    from: 'invitations_collect',
-                    localField: '_id',
-                    foreignField: 'iid',
-                    as: 'collect'
-                },
-            },
-            {
-                $project: {
-                    "_id": 0,
-                    "detail.iid": 0,
-                    "detail._id": 0,
-                    "detail.uid": 0,
-                }
-            },
-            {
-                $sort: {
-                    "detail.createTime": -1
-                }
-            },
-            {
-                $match: {
-                    "uid": userId,
-                    "classify": classify
-                }
-            }
-        ])
-        doc.forEach((val, index) => {
-            val.like = val.like.length
-            val.collect = val.collect.length
-            val.watch = val.watch.length
-            val.detail = val.detail[0]
-        })
-        return doc
+    // async getInvitationsByUserIdAndClass(userId, classify) {
+    //     let doc = await InvitationsModel.aggregate([{
+    //             $lookup: {
+    //                 from: CLASS_TO_NAME[classify],
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: "detail"
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'invitations_like',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'like'
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'invitations_watch',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'watch'
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: 'invitations_collect',
+    //                 localField: '_id',
+    //                 foreignField: 'iid',
+    //                 as: 'collect'
+    //             },
+    //         },
+    //         {
+    //             $project: {
+    //                 "_id": 0,
+    //                 "detail.iid": 0,
+    //                 "detail._id": 0,
+    //                 "detail.uid": 0,
+    //             }
+    //         },
+    //         {
+    //             $sort: {
+    //                 "detail.createTime": -1
+    //             }
+    //         },
+    //         {
+    //             $match: {
+    //                 "uid": userId,
+    //                 "classify": classify
+    //             }
+    //         }
+    //     ])
+    //     doc.forEach((val, index) => {
+    //         val.like = val.like.length
+    //         val.collect = val.collect.length
+    //         val.watch = val.watch.length
+    //         val.detail = val.detail[0]
+    //     })
+    //     return doc
 
-    },
+    // },
 
-    // 根据userId查所有的帖子
-    //TODO:无法获取点赞，收藏，浏览数
-    async getInvitationsByUserId(userId) {
-        UserModel.aggregate([{
-                $lookup: {
-                    from: CLASS_TO_NAME[0],
-                    localField: 'userId',
-                    foreignField: 'uid',
-                    as: 'legwork'
-                },
-            },
-            {
-                $lookup: {
-                    from: CLASS_TO_NAME[1],
-                    localField: 'userId',
-                    foreignField: 'uid',
-                    as: 'secondhand'
-                },
-            },
-            {
-                $lookup: {
-                    from: CLASS_TO_NAME[2],
-                    localField: 'userId',
-                    foreignField: 'uid',
-                    as: 'partTimeJob'
-                },
-            },
-            {
-                $lookup: {
-                    from: CLASS_TO_NAME[3],
-                    localField: 'userId',
-                    foreignField: 'uid',
-                    as: 'lostAndFound'
-                },
-            },
-            {
-                $project: {
-                    "_id": 0,
-                    "status": 0,
-                    "school": 0,
-                    "faculty": 0,
-                    "major": 0,
-                    "sno": 0,
-                    "legwork.uid": 0,
-                    "legwork._id": 0,
-                    "secondhand._id": 0,
-                    "partTimeJob._id": 0,
-                    "lostAndFound._id": 0,
-                    "secondhand.uid": 0,
-                    "partTimeJob.uid": 0,
-                    "lostAndFound.uid": 0,
+    // // 根据userId查所有的帖子
+    // //TODO:无法获取点赞，收藏，浏览数
+    // async getInvitationsByUserId(userId) {
+    //     UserModel.aggregate([{
+    //             $lookup: {
+    //                 from: CLASS_TO_NAME[0],
+    //                 localField: 'userId',
+    //                 foreignField: 'uid',
+    //                 as: 'legwork'
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: CLASS_TO_NAME[1],
+    //                 localField: 'userId',
+    //                 foreignField: 'uid',
+    //                 as: 'secondhand'
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: CLASS_TO_NAME[2],
+    //                 localField: 'userId',
+    //                 foreignField: 'uid',
+    //                 as: 'partTimeJob'
+    //             },
+    //         },
+    //         {
+    //             $lookup: {
+    //                 from: CLASS_TO_NAME[3],
+    //                 localField: 'userId',
+    //                 foreignField: 'uid',
+    //                 as: 'lostAndFound'
+    //             },
+    //         },
+    //         {
+    //             $project: {
+    //                 "_id": 0,
+    //                 "status": 0,
+    //                 "school": 0,
+    //                 "faculty": 0,
+    //                 "major": 0,
+    //                 "sno": 0,
+    //                 "legwork.uid": 0,
+    //                 "legwork._id": 0,
+    //                 "secondhand._id": 0,
+    //                 "partTimeJob._id": 0,
+    //                 "lostAndFound._id": 0,
+    //                 "secondhand.uid": 0,
+    //                 "partTimeJob.uid": 0,
+    //                 "lostAndFound.uid": 0,
 
-                }
-            },
-            // {
-            //     $sort: {
-            //         "createTime": -1
-            //     }
-            // },
-            {
-                $match: {
-                    "userId": userId
-                }
-            }
+    //             }
+    //         },
+    //         // {
+    //         //     $sort: {
+    //         //         "createTime": -1
+    //         //     }
+    //         // },
+    //         {
+    //             $match: {
+    //                 "userId": userId
+    //             }
+    //         }
 
-        ], (err, doc) => {
-            if (err) {
-                console.log(err)
-                return
-            }
-            console.log(JSON.stringify(doc), '用户所有的帖子')
+    //     ], (err, doc) => {
+    //         if (err) {
+    //             console.log(err)
+    //             return
+    //         }
+    //         console.log(JSON.stringify(doc), '用户所有的帖子')
 
-        })
+    //     })
 
 
-    },
+    // },
 
     // 根据帖子ID查询评论（点赞个数和楼中楼）
     async getCommentsByIID(iid) {
-
-        CommentsModel.aggregate([{
+        iid = mongoose.Types.ObjectId(iid)
+        let comments = await CommentsModel.aggregate([{
                 $lookup: {
                     from: 'comments_like',
-                    localField: 'commentId',
+                    localField: 'iid',
                     foreignField: 'commentId',
                     as: 'likes'
                 },
@@ -238,25 +241,24 @@ let dbOperate = {
             {
                 $lookup: {
                     from: 'user',
-                    localField: 'uid',
-                    foreignField: 'userId',
-                    as: 'userData'
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
                 },
             },
             {
                 $project: {
-                    "likes": 1,
+                    "_id": 1,
                     "iid": 1,
-                    "_id": 0,
+                    "openId": 1,
                     "replyCommentId": 1,
                     "parentCommentId": 1,
-                    "commentId": 1,
                     "content": 1,
                     "createTime": 1,
-                    "userData.userId": 1,
-                    "userData.nickName": 1,
-                    "userData.avatar": 1,
-                    "userData.desc": 1
+                    "likes": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.nickName": 1,
+                    "userDetail.avatar": 1,
                 }
             },
             {
@@ -270,37 +272,48 @@ let dbOperate = {
                 }
             }
 
-        ], (err, doc) => {
-            if (err) {
-                console.log(err)
-                return
-            }
-            // console.log(JSON.stringify(doc),'doc')
-            let data = [] // 最后的数据
-            doc.forEach((val, index) => {
-                // 添加点赞的个数到每条评论中
-                let likeNum = val.likes.length
-                delete val.likes
-                val.likesNum = likeNum
+        ])
+        // console.log(comments.length, 'length1')
 
-                if (val.replyCommentId === 0 && val.parentCommentId === 0) { // 直接对文章发表评论
-                    data.push({
-                        ...val,
-                        reply: []
-                    })
-                    doc.splice(index, 1)
+
+        // 1. 先查询comments 找到——id = iid，的所有评论，得到c1
+        // 2.遍历c1 获取所有的parentCommentId的数组  
+        // 3. comments表关联comments表，
+        // 先找到所有对帖子直接评论的帖子 即match:_id在parentCommentId里的
+        // 然后 关联comments表 找到comments._id  = comments.parentCommentId 
+        // 关联的结果是找到了每个直接对帖子进行评论的子评论。放在childComments里
+        // 然后关联以下comments_like找到comments._id = comments_like.commentId的放在likes是点赞的个数
+        // 最后关联 以下user 找到comments.openId = user.openId 
+        // 问题:评论的子评论没法获得到like和用户信息。。。。。。
+
+        let data = [] // 最后的数据
+        comments = comments.map((val, index) => {
+            val.likes = val.likes.length
+            val.userDetail = val.userDetail[0]
+            return val
+        })
+        comments.forEach((val, index) => {
+            if (val.replyCommentId.toString() === THE_COMMENTS_ID && val.parentCommentId.toString() === THE_COMMENTS_ID) { // 直接对文章发表评论
+                data.push({
+                    ...val,
+                    reply: []
+                })
+                comments.splice(index, 1)
+            }
+        })
+
+        // console.log(comments.length, 'length2')
+        comments.forEach((val, index) => { // 对评论的评论
+            data.forEach(v => {
+                // console.log(v._id.toString() === val.parentCommentId.toString())
+                if (v._id.toString() === val.parentCommentId.toString()) {
+                    v.reply.push(val)
+                    // return
                 }
             })
-            doc.forEach((val, index) => { // 对评论的评论
-                data.forEach(v => {
-                    if (v.commentId === val.parentCommentId) {
-                        v.reply.push(val)
-                        return
-                    }
-                })
-            })
-            console.log(JSON.stringify(data), 'Comments')
         })
+
+        return data
 
 
     },
@@ -400,26 +413,26 @@ let dbOperate = {
 
     // 添加关注
     async followingTa(openId, followId) {
-        let time = Date.parse(new Date())
         let n = new UserFollowModel({
             openId,
             followId: followId,
-            createTime: time
+            createTime: Date.now()
         })
         let result = await n.save()
-        console.log(result)
+        // console.log(result)
     },
 
     // 获取点赞数据（分我的帖子和我的回复）
     async getLikeByOpenId(openId) {
         // 获取回复点赞数据
         // 1. 查询comments 获取该openId所有的commentId。获得数组commentIdArr，
-        let commentIdDoc = await CommentsModel.find({
-            openId
-        })
-        let commentIdArr = commentIdDoc.map((val, index) => {
-            return val._id
-        })
+        // let commentIdDoc = await CommentsModel.find({
+        //     openId
+        // })
+        // let commentIdArr = commentIdDoc.map((val, index) => {
+        //     let id = mongoose.Types.ObjectId(val._id)
+        //     return id
+        // })
 
         // 2. comments_like的openId和user的openId做聚合查询,将user信息放到comments_like里
         // 筛选条件是commentId在commentIdArr里的
@@ -441,20 +454,19 @@ let dbOperate = {
             },
             {
                 $match: {
-                    commentId: {
-                        $in: commentIdArr
-                    }
+                    postOpenId: openId
                 }
             },
             {
                 $project: {
-                    _id: 0,
+                    "_id": 1,
                     "commentId": 1,
                     "createTime": 1,
                     "userDetail.openId": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
-                    "commentDetail.content": 1
+                    "commentDetail.content": 1,
+                    "commentDetail.iid": 1
                 }
             },
             {
@@ -467,18 +479,19 @@ let dbOperate = {
         commentsData = commentsData.map((val, index) => {
             val.userDetail = val.userDetail[0]
             val.content = val.commentDetail[0].content
-            delete val.commentDetail
+
             return val
         })
 
 
         // 获取帖子点赞数据，步骤同评论
-        let invitationIdDoc = await InvitationsModel.find({
-            openId
-        })
-        let invitationIdArr = invitationIdDoc.map((val, index) => {
-            return val._id
-        })
+        // let invitationIdDoc = await InvitationsModel.find({
+        //     openId
+        // })
+        // let invitationIdArr = invitationIdDoc.map((val, index) => {
+        //     let id = mongoose.Types.ObjectId(val._id)
+        //     return id
+        // })
 
         let invitationData = await InvitationsLikeModel.aggregate([{
                 $lookup: {
@@ -497,14 +510,12 @@ let dbOperate = {
             },
             {
                 $match: {
-                    iid: {
-                        $in: invitationIdArr
-                    }
+                    postOpenId: openId
                 }
             },
             {
                 $project: {
-                    _id: 0,
+                    "_id": 1,
                     "iid": 1,
                     "createTime": 1,
                     "userDetail.openId": 1,
@@ -512,7 +523,9 @@ let dbOperate = {
                     "userDetail.nickName": 1,
                     "invitationDetail.title": 1,
                     "invitationDetail.desc": 1,
-                    "invitationDetail.pic": 1
+                    "invitationDetail.pic": 1,
+                    "invitationDetail.classify": 1,
+                    "invitationDetail._id": 1
                 }
             },
             {
@@ -543,7 +556,8 @@ let dbOperate = {
         })
 
         myCommentArr = myCommentArr.map((val, index) => {
-            return val._id
+            let id = mongoose.Types.ObjectId(val._id)
+            return id
         })
 
 
@@ -572,6 +586,14 @@ let dbOperate = {
                 }
             },
             {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            },
+            {
                 $match: {
                     replyCommentId: {
                         $in: myCommentArr
@@ -583,6 +605,8 @@ let dbOperate = {
                     "_id": 1,
                     "openId": 1, // 回复的人openId
                     "createTime": 1,
+                    "iid": 1,
+                    "invitationsDetail.classify": 1,
                     "parentCommentId": 1,
                     "replyCommentId": 1,
                     "content": 1, // 回复的内容
@@ -604,6 +628,7 @@ let dbOperate = {
             val.userDetail = val.userDetail[0]
             val.myCommentDetail = val.myCommentDetail[0]
             val.fatherCommentDetail = val.fatherCommentDetail[0]
+            val.invitationsDetail = val.invitationsDetail[0]
             return val
         })
 
@@ -665,17 +690,18 @@ let dbOperate = {
             },
             {
                 $project: {
-                    "_id": 0,
-                    iid: 1,
-                    openId: 1,
-                    createTime: 1,
-                    postOpenId: 1,
+                    "_id": 1,
+                    "iid": 1,
+                    "openId": 1,
+                    "createTime": 1,
+                    "postOpenId": 1,
                     "invitationsDetail.openId": 1,
                     "invitationsDetail.title": 1,
                     "invitationsDetail.desc": 1,
                     "invitationsDetail.createTime": 1,
                     "invitationsDetail.pic": 1,
                     "invitationsDetail.price": 1,
+                    "invitationsDetail.classify": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
                     "userDetail.desc": 1,
@@ -852,6 +878,7 @@ let dbOperate = {
                 status: 0
             })
         }
+        data.id = mongoose.Types.ObjectId(data._id)
         // 修改当前这个
         let result2 = await AddressModel.update({
             _id: data._id
@@ -992,15 +1019,16 @@ let dbOperate = {
             {
                 $project: {
                     "_id": 0,
-                    iid: 1,
-                    openId: 1,
-                    createTime: 1,
-                    postOpenId: 1,
+                    "iid": 1,
+                    "openId": 1,
+                    "createTime": 1,
+                    "postOpenId": 1,
                     "invitationsDetail.openId": 1,
                     "invitationsDetail.title": 1,
                     "invitationsDetail.desc": 1,
                     "invitationsDetail.createTime": 1,
                     "invitationsDetail.pic": 1,
+                    "invitationsDetail.classify": 1,
                     "invitationsDetail.price": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
@@ -1233,7 +1261,7 @@ let dbOperate = {
     // 查询帖子
     async searchInIndexPage(searchStr, classify) {
         // 注意类型，classify传进来是string类型的
-        console.log(searchStr, classify)
+        // console.log(searchStr, classify)
         let data = InvitationsModel.aggregate([{
                 $lookup: {
                     from: 'invitations_collect',
@@ -1347,11 +1375,23 @@ let dbOperate = {
      * （帖子信息以及帖子详情信息，喜欢，浏览，点赞，留言数，发帖人用户信息）
      * 2. 存储该用户的观看记录到invitations_watch
      */
-    async getPostDetailAndAddWatchPost(openId, iid, classify) {
+    async getPostDetailAndAddWatchPost(openId, iid) {
 
-        let tableName = this.changeClassifyToStr(+classify)
-        console.log(tableName)
         let _id = mongoose.Types.ObjectId(iid)
+
+        let h = await InvitationsModel.aggregate([
+            {
+                $match: {
+                    _id: _id
+                }
+            }
+        ])
+        let classify = h[0].classify
+        // 获取帖子详情
+        let tableName = this.changeClassifyToStr(+classify)
+
+       
+
         let detail = await InvitationsModel.aggregate([{
                 $match: {
                     _id: _id
@@ -1420,7 +1460,6 @@ let dbOperate = {
                     "like": 1,
                     "watch": 1,
                     "comments": 1,
-                    "createTime": 1,
                     "invitationsDetail": 1,
                     "userDetail.openId": 1,
                     "userDetail.avatar": 1,
@@ -1452,7 +1491,6 @@ let dbOperate = {
             openId
         })
         if (doc.length == 0) {
-            console.log('增加')
             let n = new InvitationsWatchModel({
                 iid: _id,
                 openId: openId,
@@ -1460,7 +1498,6 @@ let dbOperate = {
             })
             await n.save()
         } else {
-            console.log('修改')
             await InvitationsWatchModel.updateOne({
                 iid: _id,
                 openId
@@ -1469,7 +1506,17 @@ let dbOperate = {
             })
         }
 
-        return detail
+
+        // 获取帖子留言
+        let commentDetail = await this.getCommentsByIID(_id)
+
+
+        let data = {
+            detail,
+            commentDetail
+        }
+
+        return data
 
 
     },

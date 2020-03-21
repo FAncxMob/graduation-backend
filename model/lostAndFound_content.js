@@ -9,11 +9,6 @@ let LostAndFoundContentSchema = mongoose.Schema({
         type: String,
         index: true
     },
-    tag: {
-        type: Number,
-        enum: [0, 1], // 0：丢东西  1：捡到东西
-        default: 0,
-    },
     contact: String
 
 })

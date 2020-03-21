@@ -12,11 +12,13 @@ let CommentsSchema = mongoose.Schema({
     },
     replyCommentId: {
         type: mongoose.Schema.Types.ObjectId,
-        index: true
+        index: true,
+        default: mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
     },
     parentCommentId: {
         type: mongoose.Schema.Types.ObjectId,
-        index: true
+        index: true,
+        default: mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
     },
     content: String,
     createTime: {
