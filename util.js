@@ -449,6 +449,46 @@ let dbOperate = {
         console.log(result)
     },
 
+    // 点赞帖子
+    async likePost(openId, iid, postOpenId) {
+        iid = mongoose.Types.ObjectId(iid)
+        let n = new InvitationsLikeModel({
+            openId,
+            iid,
+            postOpenId
+        })
+        await n.save()
+    },
+    // 取消点赞帖子
+    async cancelLikePost(openId, iid) {
+        iid = mongoose.Types.ObjectId(iid)
+        let result = await InvitationsLikeModel.remove({
+            openId,
+            iid
+        })
+        console.log(result)
+    },
+
+    // 收藏帖子
+    async collectPost(openId, iid, postOpenId) {
+        iid = mongoose.Types.ObjectId(iid)
+        let n = new InvitationsCollectModel({
+            openId,
+            iid,
+            postOpenId
+        })
+        await n.save()
+    },
+    // 取消收藏帖子
+    async cancelCollectPost(openId, iid) {
+        iid = mongoose.Types.ObjectId(iid)
+        let result = await InvitationsCollectModel.remove({
+            openId,
+            iid
+        })
+        console.log(result)
+    },
+
     // 获取点赞数据（分我的帖子和我的回复）
     async getLikeByOpenId(openId) {
         // 获取回复点赞数据
@@ -877,6 +917,17 @@ let dbOperate = {
     },
     // 添加地址
     async addAddress(openId, newAddress) {
+        if (newAddress.status) {
+            // 将该人原来为默认地址的status设为0
+            await AddressModel.updateOne({
+                openId,
+                status: 1
+            }, {
+                status: 0
+            })
+        }
+        newAddress.id = mongoose.Types.ObjectId(newAddress._id)
+        // 新增当前这个
         let n = new AddressModel({
             openId,
             ...newAddress
@@ -1543,12 +1594,28 @@ let dbOperate = {
                 followId: detail.openId
             }
         }])
+        // 是否点赞了帖子
+        let isLike = await InvitationsLikeModel.aggregate([{
+            $match: {
+                openId,
+                iid: _id
+            }
+        }])
+        // 是否收藏了帖子
+        let isCollect = await InvitationsCollectModel.aggregate([{
+            $match: {
+                openId,
+                iid: _id
+            }
+        }])
 
 
         let data = {
             detail,
             commentDetail,
             isFollowing: isFollowing.length,
+            isLike: isLike.length,
+            isCollect: isCollect.length,
             openId
         }
 
@@ -1660,8 +1727,7 @@ let dbOperate = {
             replyCommentId,
             parentCommentId
         })
-        let result = await n.save()
-        console.log(result)
+        await n.save()
     }
 
 

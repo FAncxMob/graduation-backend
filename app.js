@@ -16,7 +16,166 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
-// 评论
+// 取消点赞某个帖子
+router.get('/cancelLikePost', async (ctx, next) => {
+    console.log('/cancelLikePost')
+    let code = 0
+    let {
+        iid
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.cancelLikePost(openid, iid)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 点赞某个帖子
+router.get('/likePost', async (ctx, next) => {
+    console.log('/likePost')
+    let code = 0
+    let {
+        iid,
+        postOpenId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.likePost(openid, iid, postOpenId)
+        ctx.body = {
+            code: 1
+        }
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+
+// 取消收藏某个帖子
+router.get('/cancelCollectPost', async (ctx, next) => {
+    console.log('/cancelCollectPost')
+    let code = 0
+    let {
+        iid
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.cancelCollectPost(openid, iid)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 收藏某个帖子
+router.get('/collectPost', async (ctx, next) => {
+    console.log('/collectPost')
+    let code = 0
+    let {
+        iid,
+        postOpenId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.collectPost(openid, iid, postOpenId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 取消点赞某个评论
+router.get('/cancelCommentLike', async (ctx, next) => {
+    console.log('/cancelCommentLike')
+    let code = 0
+    let {
+        commentId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.cancelCommentLike(openid, commentId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 点赞某个评论
+router.get('/commentLike', async (ctx, next) => {
+    console.log('/commentLike')
+    let code = 0
+    let {
+        commentId,
+        postOpenId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.commentLike(openid, commentId, postOpenId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 发布评论
 router.get('/sendComment', async (ctx, next) => {
     console.log('/sendComment')
     let code = 0
@@ -44,57 +203,7 @@ router.get('/sendComment', async (ctx, next) => {
         }
     }
 })
-// 取消点赞某个评论
-router.get('/cancelCommentLike', async (ctx, next) => {
-    console.log('/cancelCommentLike')
-    let code = 0
-    let {
-        commentId
-    } = ctx.query
 
-    let token = ctx.request.header.authorization
-    try {
-        let {
-            openid
-        } = jwt.verify(token, PWD)
-        await dbOperate.cancelCommentLike(openid, commentId)
-        ctx.body = {
-            code: 1
-        }
-
-    } catch {
-        ctx.body = {
-            code: 0,
-            message: 'token验证失败辽'
-        }
-    }
-})
-// 点赞某个评论
-router.get('/commentLike', async (ctx, next) => {
-    console.log('/commentLike')
-    let code = 0
-    let {
-        commentId,
-        postOpenId
-    } = ctx.query
-
-    let token = ctx.request.header.authorization
-    try {
-        let {
-            openid
-        } = jwt.verify(token, PWD)
-        await dbOperate.commentLike(openid, commentId, postOpenId)
-        ctx.body = {
-            code: 1
-        }
-
-    } catch {
-        ctx.body = {
-            code: 0,
-            message: 'token验证失败辽'
-        }
-    }
-})
 // 获取主页帖子详情,并且将该openid访问该iid插入到帖子—_watch这个关联表
 router.get('/getPostDetail', async (ctx, next) => {
     console.log('/getPostDetail')

@@ -25,7 +25,7 @@ let InvitationsSchema = mongoose.Schema({
     createTime: {
         type: Number,
         index: true,
-        default: Date.parse(Date.now())
+        default: Date.now()
     },
     price: {
         type: String,
