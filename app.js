@@ -16,6 +16,85 @@ const PWD = 'fcx'
 //     console.log(err, doc)
 // })
 
+// 评论
+router.get('/sendComment', async (ctx, next) => {
+    console.log('/sendComment')
+    let code = 0
+    let {
+        content,
+        iid,
+        replyCommentId,
+        parentCommentId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.sendComment(openid, content, iid, replyCommentId, parentCommentId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 取消点赞某个评论
+router.get('/cancelCommentLike', async (ctx, next) => {
+    console.log('/cancelCommentLike')
+    let code = 0
+    let {
+        commentId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.cancelCommentLike(openid, commentId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 点赞某个评论
+router.get('/commentLike', async (ctx, next) => {
+    console.log('/commentLike')
+    let code = 0
+    let {
+        commentId,
+        postOpenId
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.commentLike(openid, commentId, postOpenId)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取主页帖子详情,并且将该openid访问该iid插入到帖子—_watch这个关联表
 router.get('/getPostDetail', async (ctx, next) => {
     console.log('/getPostDetail')

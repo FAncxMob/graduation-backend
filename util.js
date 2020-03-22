@@ -429,6 +429,26 @@ let dbOperate = {
         // console.log(result)
     },
 
+    // 点赞评论
+    async commentLike(openId, commentId, postOpenId) {
+        commentId = mongoose.Types.ObjectId(commentId)
+        let n = new CommentsLikeModel({
+            openId,
+            commentId,
+            postOpenId
+        })
+        await n.save()
+    },
+    // 取消点赞评论
+    async cancelCommentLike(openId, commentId) {
+        commentId = mongoose.Types.ObjectId(commentId)
+        let result = await CommentsLikeModel.remove({
+            openId,
+            commentId
+        })
+        console.log(result)
+    },
+
     // 获取点赞数据（分我的帖子和我的回复）
     async getLikeByOpenId(openId) {
         // 获取回复点赞数据
@@ -1628,6 +1648,21 @@ let dbOperate = {
 
 
     },
+
+    async sendComment(openId, content, iid, replyCommentId, parentCommentId) {
+        iid = mongoose.Types.ObjectId(iid)
+        replyCommentId = mongoose.Types.ObjectId(replyCommentId)
+        parentCommentId = mongoose.Types.ObjectId(parentCommentId)
+        let n = new CommentsModel({
+            openId,
+            content,
+            iid,
+            replyCommentId,
+            parentCommentId
+        })
+        let result = await n.save()
+        console.log(result)
+    }
 
 
 
