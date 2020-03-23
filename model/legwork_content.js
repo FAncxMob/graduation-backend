@@ -20,13 +20,13 @@ let LegworkContentSchema = mongoose.Schema({
         default: Date.now()
     },
     addressId: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     takerId: {
         type: String,
         index: true,
-        default: 0
+        default: ''
     },
 
     verify: {

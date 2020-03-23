@@ -1,5 +1,8 @@
 let Koa = require('koa')
+const multer = require('koa-multer');
 let router = require('koa-router')()
+var path = require("path")
+const staticFiles = require('koa-static')
 let app = new Koa()
 
 let dbOperate = require('./util')
@@ -9,12 +12,66 @@ var UserModel = require('./model/user')
 var jwt = require('jsonwebtoken');
 let Fly = require("flyio/src/node")
 let fly = new Fly;
-
+const fs = require('fs')
 const PWD = 'fcx'
+app.use(staticFiles(path.join(__dirname + '/uploads/')))
+
+var storage = multer.diskStorage({
+    //文件保存路径
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    //修改文件名称
+    filename: function (req, file, cb) {
+        var fileFormat = (file.originalname).split("."); //以点分割成数组，数组的最后一项就是后缀名
+        cb(null, Date.now() + "." + fileFormat[fileFormat.length - 1]);
+    }
+})
+//加载配置
+var upload = multer({
+    storage: storage
+});
 
 // UserModel.createUser(10, (err, doc) => {
 //     console.log(err, doc)
 // })
+
+// 上传图片
+router.post('/uploadPic', upload.single('file'), async (ctx, next) => {
+    console.log('/uploadPic')
+    console.log(ctx.req.file)
+
+    ctx.body = {
+        fileName: ctx.req.file.filename //返回文件名
+    }
+})
+
+
+
+// 发布跑腿帖子
+router.get('/publishLegWork', async (ctx, next) => {
+    console.log('/publishLegWork')
+    let code = 0
+    let data = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.publishLegWork(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
 
 // 取消点赞某个帖子
 router.get('/cancelLikePost', async (ctx, next) => {
@@ -69,31 +126,6 @@ router.get('/likePost', async (ctx, next) => {
 })
 
 
-// 取消收藏某个帖子
-router.get('/cancelCollectPost', async (ctx, next) => {
-    console.log('/cancelCollectPost')
-    let code = 0
-    let {
-        iid
-    } = ctx.query
-
-    let token = ctx.request.header.authorization
-    try {
-        let {
-            openid
-        } = jwt.verify(token, PWD)
-        await dbOperate.cancelCollectPost(openid, iid)
-        ctx.body = {
-            code: 1
-        }
-
-    } catch {
-        ctx.body = {
-            code: 0,
-            message: 'token验证失败辽'
-        }
-    }
-})
 
 // 收藏某个帖子
 router.get('/collectPost', async (ctx, next) => {
@@ -476,13 +508,13 @@ router.get('/getAllPublish', async (ctx, next) => {
 router.get('/cancelCollectPost', async (ctx, next) => {
     console.log('/cancelCollectPost')
     let code = 0
-    let cancelInvitationsId = ctx.query.cancelInvitationsId
+    let iid = ctx.query.iid
     let token = ctx.request.header.authorization
     try {
         let {
             openid
         } = jwt.verify(token, PWD)
-        await dbOperate.cancelCollectPost(openid, cancelInvitationsId)
+        await dbOperate.cancelCollectPost(openid, iid)
         ctx.body = {
             code: 1
         }

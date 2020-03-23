@@ -1,6 +1,7 @@
 var UserModel = require('./model/user')
 var UserFollowModel = require('./model/user_follow')
 
+const fs = require('fs')
 var InvitationsModel = require('./model/invitations')
 var LegworkContentModel = require('./model/legwork_content')
 var SecondhandContentModel = require('./model/secondhand_content')
@@ -22,7 +23,7 @@ let mongoose = require('mongoose')
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
 let THE_COMMENTS_ID = '5e73a4fc3793ae3a44a97e52'
 
-
+const config = require('./model/config')
 
 
 
@@ -482,7 +483,8 @@ let dbOperate = {
     // 取消收藏帖子
     async cancelCollectPost(openId, iid) {
         iid = mongoose.Types.ObjectId(iid)
-        let result = await InvitationsCollectModel.remove({
+        console.log(openId, iid)
+        let result = await InvitationsCollectModel.deleteOne({
             openId,
             iid
         })
@@ -794,18 +796,11 @@ let dbOperate = {
             val.comments = val.comments.length
             return val
         })
+        console.log(data.length)
 
         return data
     },
 
-    // 取消我收藏的某个帖子
-    async cancelCollectPost(openId, cancelInvitationsId) {
-        let _iid = mongoose.Types.ObjectId(cancelInvitationsId)
-        let result = await InvitationsCollectModel.remove({
-            openId,
-            iid: _iid
-        })
-    },
 
     // 根据某用户某类别获取帖子数据(不要详情数据)
     async getMyInvitationsByClass(openId, classify) {
@@ -1716,6 +1711,7 @@ let dbOperate = {
 
     },
 
+    // 发布评论
     async sendComment(openId, content, iid, replyCommentId, parentCommentId) {
         iid = mongoose.Types.ObjectId(iid)
         replyCommentId = mongoose.Types.ObjectId(replyCommentId)
@@ -1728,9 +1724,101 @@ let dbOperate = {
             parentCommentId
         })
         await n.save()
-    }
+    },
 
+    // 发布跑腿帖子
+    async publishLegWork(openId, data) {
+        data.pic = JSON.parse(data.pic)
+        console.log(data, 'data')
+        console.log(config.host)
+        data.pic = data.pic.map((val, index) => {
+            console.log(val)
+            return config.host + '/' + val
+        })
+        console.log(data.pic)
+        data.addressId = mongoose.Types.ObjectId(data.addressId)
+        let createTime = Date.now()
+        let invitations = new InvitationsModel({
+            openId,
+            ...data,
+            createTime
+        })
+        console.log(createTime)
+        let result = await invitations.save()
+        console.log(result._id)
+        let iid = mongoose.Types.ObjectId(result._id)
+        let legworkContent = new LegworkContentModel({
+            iid,
+            openId,
+            ...data
+        })
+        await legworkContent.save()
+    },
 
+    async getPostData(ctx) {
+        return new Promise((resolve, reject) => {
+            try {
+                let str = ''
+                ctx.req.on('data', (chunk) => {
+                    str += chunk
+                })
+                ctx.req.on('end', (chunk) => {
+                    resolve(str)
+                })
+
+            } catch (error) {
+                reject(err)
+            }
+        })
+    },
+
+    // 读文件
+    readFileSync(path) {
+        // 读路径
+        let data = fs.readFileSync(path, 'utf-8')
+        console.log(data)
+        console.log('同步方法执行完毕')
+    },
+
+    readFile(path, recall) {
+        fs.readFile(path, (err, data) => {
+            if (err) {
+                console.log(err)
+            } else {
+                console.log(data.toString());
+                recall(data)
+            }
+        })
+        console.log('异步方法执行完毕')
+    },
+
+    // 读取二进制图片(传入路径)
+    readImg(path, res) {
+        fs.readFile(path, 'binary', (err, fileData) => {
+            if (err) {
+                console.log(err)
+                return
+            } else {
+                res.write(fileData, 'binary')
+                res.end()
+            }
+        })
+    },
+
+    // 写文件
+    writeFile(path, data, recall) {
+        fs.writeFile(path, data, (err) => {
+            if (err) {
+                throw err
+            }
+            console.log('文件被保存了')
+            recall('写文件成功')
+        })
+    },
+    writeFileSync(path, data) {
+        fs.writeFileSync(path, data)
+        console.log(同步写文件完成)
+    },
 
 }
 
