@@ -7,7 +7,7 @@ let InvitationsSchema = mongoose.Schema({
     },
     classify: {
         type: Number,
-        enum: [0, 1, 2, 3, 4], // 枚举只能用在String类型上
+        enum: [0, 1, 2, 3, 4, 5], // 枚举只能用在String类型上
         //  0：校内跑腿，1：二手交易，2：兼职招聘，3：失物招领。4:校园热点文章
         index: true
     },

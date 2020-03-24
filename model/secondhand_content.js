@@ -1,5 +1,7 @@
 let mongoose = require('./db.js')
 
+// 如果选择了 仅支持送货上门。存的deliveryAddressId 就是  固定的5e73a4fc3793ae3a44a97e52，和评论的是一样的
+
 let SecondhandContentSchema = mongoose.Schema({
     iid: {
         type: mongoose.Schema.Types.ObjectId,
@@ -17,7 +19,11 @@ let SecondhandContentSchema = mongoose.Schema({
         enum: [0, 1, 2], // 0：都可以  1：自提，2：送货上门
         default: 0,
     },
-    deliveryAddressId: String,
+    deliveryAddressId: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        default: mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
+    },
     takerId: {
         type: String,
         index: true,

@@ -1553,6 +1553,7 @@ let dbOperate = {
         detail.watch = detail.watch.length
         detail.comments = detail.comments.length
         let num = await this.completedOrder(openId, classify)
+        console.log(num)
         detail.userDetail.completedOrderNum = num
 
 
@@ -1704,6 +1705,50 @@ let dbOperate = {
                 // }
             ])
             completedOrder = result.length
+        } else if (classify == 2) {
+            let result = await PartTimeJobContentModel.aggregate([{
+                    $match: {
+                        openId
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+
+                    }
+                }
+            ])
+            completedOrder = result.length
+        } else if (classify == 3) {
+            let result = await InvitationsModel.aggregate([{
+                    $match: {
+                        openId,
+                        classify: 3
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+
+                    }
+                }
+            ])
+            completedOrder = result.length
+        } else if (classify == 5) {
+            let result = await InvitationsModel.aggregate([{
+                    $match: {
+                        openId,
+                        classify: 5
+                    }
+                },
+                {
+                    $project: {
+                        "_id": 1,
+
+                    }
+                }
+            ])
+            completedOrder = result.length
         }
 
         return completedOrder
@@ -1726,16 +1771,60 @@ let dbOperate = {
         await n.save()
     },
 
+    // 发布失物招领帖子
+    async publishLostAndFound(openId, data) {
+        data.pic = JSON.parse(data.pic)
+        data.pic = data.pic.map((val, index) => {
+            return config.host + '/' + val
+        })
+        data.classify = +data.classify
+        let createTime = Date.now()
+        let invitations = new InvitationsModel({
+            openId,
+            ...data,
+            createTime
+        })
+        let result = await invitations.save()
+        let iid = mongoose.Types.ObjectId(result._id)
+
+        let lostAndFoundContent = new LostAndFoundContentModel({
+            iid,
+            openId,
+            ...data
+        })
+        let result2 = await lostAndFoundContent.save()
+    },
+    // 发布兼职招聘帖子
+    async publishPartTimeJob(openId, data) {
+        data.pic = JSON.parse(data.pic)
+        data.pic = data.pic.map((val, index) => {
+            return config.host + '/' + val
+        })
+        console.log(data)
+        let createTime = Date.now()
+        let invitations = new InvitationsModel({
+            openId,
+            ...data,
+            createTime
+        })
+        let result = await invitations.save()
+        let iid = mongoose.Types.ObjectId(result._id)
+
+        let partTimeJobContent = new PartTimeJobContentModel({
+            iid,
+            openId,
+            ...data
+        })
+        await partTimeJobContent.save()
+    },
     // 发布跑腿帖子
     async publishLegWork(openId, data) {
         data.pic = JSON.parse(data.pic)
-        console.log(data, 'data')
-        console.log(config.host)
         data.pic = data.pic.map((val, index) => {
-            console.log(val)
+            // console.log(val)
             return config.host + '/' + val
         })
-        console.log(data.pic)
+        // console.log(data)
         data.addressId = mongoose.Types.ObjectId(data.addressId)
         let createTime = Date.now()
         let invitations = new InvitationsModel({
@@ -1743,9 +1832,7 @@ let dbOperate = {
             ...data,
             createTime
         })
-        console.log(createTime)
         let result = await invitations.save()
-        console.log(result._id)
         let iid = mongoose.Types.ObjectId(result._id)
         let legworkContent = new LegworkContentModel({
             iid,
@@ -1754,7 +1841,45 @@ let dbOperate = {
         })
         await legworkContent.save()
     },
+    // 发布二手交易帖子
+    async publishSecondhand(openId, data) {
+        data.pic = JSON.parse(data.pic)
+        data.pic = data.pic.map((val, index) => {
+            return config.host + '/' + val
+        })
+        // console.log(data, 'data')
 
+        data.deliveryAddressId = mongoose.Types.ObjectId(data.deliveryAddressId)
+        let createTime = Date.now()
+        let invitations = new InvitationsModel({
+            openId,
+            ...data,
+            createTime
+        })
+        let result = await invitations.save()
+        let iid = mongoose.Types.ObjectId(result._id)
+        if (data.deliveryWay != 2) {
+            let secondhandContent = new SecondhandContentModel({
+                iid,
+                openId,
+                ...data
+            })
+            // console.log(secondhandContent, '传了deliveryAddressId')
+            await secondhandContent.save()
+        } else {
+            let deliveryAddressId = mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
+            let secondhandContent = new SecondhandContentModel({
+                iid,
+                openId,
+                ...data,
+                deliveryAddressId
+            })
+            // console.log(secondhandContent, '没传deliveryAddressId')
+            await secondhandContent.save()
+        }
+    },
+
+    // 获取post参数
     async getPostData(ctx) {
         return new Promise((resolve, reject) => {
             try {
@@ -1819,6 +1944,37 @@ let dbOperate = {
         fs.writeFileSync(path, data)
         console.log(同步写文件完成)
     },
+
+    // 删除指定文件夹的图片
+    deletePic(path) {
+        path = __dirname + '/uploads/' + path
+        console.log(fs.existsSync(path), path)
+        if (fs.existsSync(path)) {
+            fs.unlinkSync(path);
+            return {
+                code: 1
+            }
+            // if (fs.statSync(path).isDirectory()) {
+            //     files = fs.readdirSync(path);
+            //     files.forEach(function (file, index) {
+            //         var curPath = path + "/" + file;
+            //         if (fs.statSync(curPath).isDirectory()) {
+            //             deleteFolder(curPath);
+            //         } else {
+            //             fs.unlinkSync(curPath);
+            //         }
+            //     });
+            //     // fs.rmdirSync(path);
+            // } else {
+            //     fs.unlinkSync(path);
+            // }
+        } else {
+            return {
+                code: 0,
+                msg: '服务器上没有此图片'
+            }
+        }
+    }
 
 }
 

@@ -15,9 +15,7 @@ let LegworkContentSchema = mongoose.Schema({
     //     default: 99999
     // },
     expectedTime: {
-        type: Number,
-        index: true,
-        default: Date.now()
+        type: String
     },
     addressId: {
         type: mongoose.Schema.Types.ObjectId,

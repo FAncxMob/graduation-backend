@@ -39,14 +39,89 @@ var upload = multer({
 // 上传图片
 router.post('/uploadPic', upload.single('file'), async (ctx, next) => {
     console.log('/uploadPic')
-    console.log(ctx.req.file)
+    // console.log(ctx.req.file)
 
     ctx.body = {
         fileName: ctx.req.file.filename //返回文件名
     }
 })
+router.get('/deletePic', async (ctx, next) => {
+    let path = ctx.query.path
+    let result = await dbOperate.deletePic(path)
+    ctx.body = {
+        ...result
+    }
+})
 
+// 发布失物招领帖子
+router.get('/publishLostAndFound', async (ctx, next) => {
+    console.log('/publishLostAndFound')
+    let code = 0
+    let data = ctx.query
 
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.publishLostAndFound(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 发布兼职招聘帖子
+router.get('/publishPartTimeJob', async (ctx, next) => {
+    console.log('/publishPartTimeJob')
+    let code = 0
+    let data = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.publishPartTimeJob(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 发布二手交易帖子
+router.get('/publishSecondhand', async (ctx, next) => {
+    console.log('/publishSecondhand')
+    let code = 0
+    let data = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.publishSecondhand(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 
 // 发布跑腿帖子
 router.get('/publishLegWork', async (ctx, next) => {
