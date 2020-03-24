@@ -21,9 +21,11 @@ var StudentModel = require('./model/student')
 let mongoose = require('mongoose')
 
 const CLASS_TO_NAME = ['legwork_content', 'secondhand_content', 'partTimeJob_content', 'lostAndFound_content']
-let THE_COMMENTS_ID = '5e73a4fc3793ae3a44a97e52'
+let THE_NULL_ID_STRING = '5e73a4fc3793ae3a44a97e52'
 
 const config = require('./model/config')
+
+const THE_NULL_OBJECT_ID = mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
 
 
 
@@ -74,7 +76,8 @@ let dbOperate = {
 
         let n = new UserModel({
             openId: openId,
-            ...data
+            ...data,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -301,7 +304,7 @@ let dbOperate = {
             return val
         })
         comments.forEach((val, index) => {
-            if (val.replyCommentId.toString() === THE_COMMENTS_ID && val.parentCommentId.toString() === THE_COMMENTS_ID) { // 直接对文章发表评论
+            if (val.replyCommentId.toString() === THE_NULL_ID_STRING && val.parentCommentId.toString() === THE_NULL_ID_STRING) { // 直接对文章发表评论
                 data.push({
                     ...val,
                     reply: []
@@ -436,7 +439,8 @@ let dbOperate = {
         let n = new CommentsLikeModel({
             openId,
             commentId,
-            postOpenId
+            postOpenId,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -456,7 +460,8 @@ let dbOperate = {
         let n = new InvitationsLikeModel({
             openId,
             iid,
-            postOpenId
+            postOpenId,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -476,7 +481,8 @@ let dbOperate = {
         let n = new InvitationsCollectModel({
             openId,
             iid,
-            postOpenId
+            postOpenId,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -771,6 +777,7 @@ let dbOperate = {
                     "invitationsDetail.pic": 1,
                     "invitationsDetail.price": 1,
                     "invitationsDetail.classify": 1,
+                    "invitationsDetail.status": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
                     "userDetail.desc": 1,
@@ -856,6 +863,7 @@ let dbOperate = {
                     "title": 1,
                     "desc": 1,
                     "pic": 1,
+                    "status": 1,
                     "price": 1,
                     "classify": 1,
                     "createTime": 1,
@@ -925,7 +933,8 @@ let dbOperate = {
         // 新增当前这个
         let n = new AddressModel({
             openId,
-            ...newAddress
+            ...newAddress,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -1103,6 +1112,7 @@ let dbOperate = {
                     "invitationsDetail.pic": 1,
                     "invitationsDetail.classify": 1,
                     "invitationsDetail.price": 1,
+                    "invitationsDetail.status": 1,
                     "userDetail.avatar": 1,
                     "userDetail.nickName": 1,
                     "userDetail.desc": 1,
@@ -1146,14 +1156,14 @@ let dbOperate = {
                     as: 'collect'
                 }
             },
-            // {
-            //     $lookup: {
-            //         from: 'invitations_like',
-            //         localField: '_id',
-            //         foreignField: 'iid',
-            //         as: 'like'
-            //     }
-            // },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
             {
                 $lookup: {
                     from: 'invitations_watch',
@@ -1185,7 +1195,7 @@ let dbOperate = {
                     "pic": 1,
                     "createTime": 1,
                     "collect": 1,
-                    // "like": 1,
+                    "like": 1,
                     "watch": 1,
                     "detail": 1,
                     // "comments": 1
@@ -1199,7 +1209,7 @@ let dbOperate = {
         ])
 
         data = data.map((val, index) => {
-            // val.like = val.like.length
+            val.like = val.like.length
             val.collect = val.collect.length
             val.watch = val.watch.length
             val.detail = val.detail[0]
@@ -1331,7 +1341,7 @@ let dbOperate = {
         }
         return data
     },
-    // 查询帖子
+    // 主页查询帖子
     async searchInIndexPage(searchStr, classify) {
         // 注意类型，classify传进来是string类型的
         // console.log(searchStr, classify)
@@ -1437,6 +1447,402 @@ let dbOperate = {
         // }
 
         return data
+    },
+    // 校园热点查询帖子
+    async searchSchoolNews(searchStr, classify) {
+        console.log(searchStr, classify)
+        classify = +classify
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify,
+                    $or: [ //多条件，数组
+                        {
+                            title: {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            desc: {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            // {
+            //     $lookup: {
+            //         from: 'invitations_like',
+            //         localField: '_id',
+            //         foreignField: 'iid',
+            //         as: 'like'
+            //     }
+            // },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            }, {
+                $lookup: {
+                    from: 'schoolNews_content',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'detail'
+                }
+            },
+            // {
+            //     $lookup: {
+            //         from: 'comments',
+            //         localField: '_id',
+            //         foreignField: 'iid',
+            //         as: 'comments'
+            //     }
+            // },
+            {
+                $project: {
+                    "_id": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    // "like": 1,
+                    "watch": 1,
+                    "detail": 1,
+                    // "comments": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        // data = data.map((val, index) => {
+        //     // val.like = val.like.length
+        //     val.collect = val.collect.length
+        //     val.watch = val.watch.length
+        //     val.detail = val.detail[0]
+        //     // val.comments = val.comments.length
+        //     return val
+        // })
+
+        return data
+
+
+    },
+    // 我的收藏搜索帖子
+    async searchMyCollect(openId, searchStr) {
+        let data = await InvitationsCollectModel.aggregate([{
+                $match: {
+                    openId
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'user',
+                    localField: 'postOpenId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "iid": 1,
+                    "openId": 1,
+                    "createTime": 1,
+                    "postOpenId": 1,
+                    "invitationsDetail.openId": 1,
+                    "invitationsDetail.title": 1,
+                    "invitationsDetail.desc": 1,
+                    "invitationsDetail.createTime": 1,
+                    "invitationsDetail.pic": 1,
+                    "invitationsDetail.price": 1,
+                    "invitationsDetail.classify": 1,
+                    "invitationsDetail.status": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "userDetail.desc": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $match: {
+                    $or: [ //多条件，数组
+                        {
+                            "invitationsDetail.title": {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            "invitationsDetail.desc": {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            }, {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+
+        return data
+
+
+    },
+    // 我的历史搜索帖子
+    async searchMyHistory(openId, searchStr) {
+        let data = await InvitationsWatchModel.aggregate([{
+                $match: {
+                    openId
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'user',
+                    localField: 'postOpenId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'iid',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $project: {
+                    "_id": 0,
+                    "iid": 1,
+                    "openId": 1,
+                    "createTime": 1,
+                    "postOpenId": 1,
+                    "invitationsDetail.openId": 1,
+                    "invitationsDetail.title": 1,
+                    "invitationsDetail.desc": 1,
+                    "invitationsDetail.createTime": 1,
+                    "invitationsDetail.pic": 1,
+                    "invitationsDetail.classify": 1,
+                    "invitationsDetail.price": 1,
+                    "invitationsDetail.status": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "userDetail.desc": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $match: {
+                    $or: [ //多条件，数组
+                        {
+                            "invitationsDetail.title": {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            "invitationsDetail.desc": {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+        return data
+
+    },
+    // 回复我的搜索
+    async searchMyComment(openId, searchStr) {
+        let myCommentArr = await CommentsModel.find({
+            openId
+        }, {
+            _id: 1
+        })
+
+        myCommentArr = myCommentArr.map((val, index) => {
+            let id = mongoose.Types.ObjectId(val._id)
+            return id
+        })
+        let data = await CommentsModel.aggregate([{
+                $match: {
+                    replyCommentId: {
+                        $in: myCommentArr
+                    }
+                }
+            }, {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'replyCommentId',
+                    foreignField: '_id',
+                    as: 'myCommentDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: 'parentCommentId',
+                    foreignField: '_id',
+                    as: 'fatherCommentDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations',
+                    localField: 'iid',
+                    foreignField: '_id',
+                    as: 'invitationsDetail'
+                }
+            },
+
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1, // 回复的人openId
+                    "createTime": 1,
+                    "iid": 1,
+                    "invitationsDetail.classify": 1,
+                    "parentCommentId": 1,
+                    "replyCommentId": 1,
+                    "content": 1, // 回复的内容
+                    "userDetail.openId": 1, // 回复的人openId
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                    "myCommentDetail.content": 1, // 我的评论内容
+                    "fatherCommentDetail.content": 1 // 父级评论的内容
+                }
+            },
+            {
+                $match: {
+                    $or: [ //多条件，数组
+                        {
+                            "fatherCommentDetail.content": {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            "myCommentDetail.content": {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            "content": {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+        return data
+
     },
 
     /**
@@ -1566,7 +1972,8 @@ let dbOperate = {
             let n = new InvitationsWatchModel({
                 iid: _id,
                 openId: openId,
-                postOpenId: detail.openId
+                postOpenId: detail.openId,
+                createTime: Date.now()
             })
             await n.save()
         } else {
@@ -1766,7 +2173,8 @@ let dbOperate = {
             content,
             iid,
             replyCommentId,
-            parentCommentId
+            parentCommentId,
+            createTime: Date.now()
         })
         await n.save()
     },
@@ -1782,7 +2190,8 @@ let dbOperate = {
         let invitations = new InvitationsModel({
             openId,
             ...data,
-            createTime
+            createTime,
+            createTime: Date.now()
         })
         let result = await invitations.save()
         let iid = mongoose.Types.ObjectId(result._id)
@@ -1790,7 +2199,8 @@ let dbOperate = {
         let lostAndFoundContent = new LostAndFoundContentModel({
             iid,
             openId,
-            ...data
+            ...data,
+            createTime: Date.now()
         })
         let result2 = await lostAndFoundContent.save()
     },
@@ -1805,7 +2215,7 @@ let dbOperate = {
         let invitations = new InvitationsModel({
             openId,
             ...data,
-            createTime
+            createTime,
         })
         let result = await invitations.save()
         let iid = mongoose.Types.ObjectId(result._id)
@@ -1813,7 +2223,7 @@ let dbOperate = {
         let partTimeJobContent = new PartTimeJobContentModel({
             iid,
             openId,
-            ...data
+            ...data,
         })
         await partTimeJobContent.save()
     },
@@ -1862,17 +2272,18 @@ let dbOperate = {
             let secondhandContent = new SecondhandContentModel({
                 iid,
                 openId,
-                ...data
+                ...data,
+                buyerAddressId: THE_NULL_OBJECT_ID
             })
             // console.log(secondhandContent, '传了deliveryAddressId')
             await secondhandContent.save()
         } else {
-            let deliveryAddressId = mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
             let secondhandContent = new SecondhandContentModel({
                 iid,
                 openId,
                 ...data,
-                deliveryAddressId
+                deliveryAddressId: THE_NULL_OBJECT_ID,
+                buyerAddressId: THE_NULL_OBJECT_ID
             })
             // console.log(secondhandContent, '没传deliveryAddressId')
             await secondhandContent.save()
@@ -1974,7 +2385,220 @@ let dbOperate = {
                 msg: '服务器上没有此图片'
             }
         }
-    }
+    },
+
+
+    // 获取我要购买界面需要的数据
+    async getBuyData(openId, iid) {
+        console.log(iid)
+        iid = mongoose.Types.ObjectId(iid)
+        let buyData = await InvitationsModel.aggregate([{
+                $match: {
+                    _id: iid
+                }
+            },
+            {
+                $lookup: {
+                    from: `secondhand_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'invitationsDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "invitationsDetail": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                }
+            }
+        ])
+        buyData = buyData[0]
+        buyData.invitationsDetail = buyData.invitationsDetail[0]
+        buyData.userDetail = buyData.userDetail[0]
+        console.log(buyData)
+        if (buyData.invitationsDetail.deliveryWay !== 2) {
+            // 需要显示自提点
+            // 获取自提点地址addressData
+            let deliveryAddressId = buyData.invitationsDetail.deliveryAddressId
+            deliveryAddressId = mongoose.Types.ObjectId(deliveryAddressId)
+            let addressData = await AddressModel.find({
+                _id: deliveryAddressId
+            })
+            buyData.addressData = addressData[0]
+        }
+
+
+
+        let data = {
+            buyData
+        }
+
+        return data
+    },
+    // 获取我要帮忙界面需要的数据
+    async getHelpData(openId, iid) {
+        console.log(iid)
+        iid = mongoose.Types.ObjectId(iid)
+        let helpData = await InvitationsModel.aggregate([{
+                $match: {
+                    _id: iid
+                }
+            },
+            {
+                $lookup: {
+                    from: `legwork_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'invitationsDetail'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "invitationsDetail": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                }
+            }
+        ])
+        helpData = helpData[0]
+        helpData.invitationsDetail = helpData.invitationsDetail[0]
+        helpData.userDetail = helpData.userDetail[0]
+
+        // 获取送货地址addressData
+        let addressId = helpData.invitationsDetail.addressId
+        addressId = mongoose.Types.ObjectId(addressId)
+        let addressData = await AddressModel.find({
+            _id: addressId
+        })
+        helpData.addressData = addressData[0]
+
+        let data = {
+            helpData
+        }
+
+        return data
+    },
+
+    // 确认我要帮忙，
+    // TODO:生成核销二维码
+    async submitHelp(openId, takerContact, iid) {
+        console.log(openId, takerContact, iid)
+
+        let code = 0
+
+        iid = mongoose.Types.ObjectId(iid)
+        let result = await LegworkContentModel.find({
+            iid
+        })
+        let status = result[0].status
+        console.log(+status, 'result')
+        if (+status === 0) {
+            code = 1
+
+            let r1 = await InvitationsModel.updateOne({
+                _id: iid
+            }, {
+                status: 1
+            })
+            let r2 = await LegworkContentModel.updateOne({
+                iid
+            }, {
+                takerId: openId,
+                takerContact,
+                status: 1,
+                verify: '123456'
+            })
+
+            console.log(r1, r2)
+        } else {
+            code = 2 // 已经被承接了
+        }
+
+
+        let data = {
+            code
+        }
+
+        return data
+    },
+    // 确认我要购买，
+    // TODO:生成核销二维码
+    async submitBuy(openId, buyerAddressId, iid) {
+        console.log(openId, buyerAddressId, iid)
+
+        let code = 0
+
+        iid = mongoose.Types.ObjectId(iid)
+        buyerAddressId = mongoose.Types.ObjectId(buyerAddressId)
+        let result = await SecondhandContentModel.find({
+            iid
+        })
+        let status = result[0].status
+        console.log(+status, 'result')
+        if (+status === 0) {
+            code = 1
+
+            let r1 = await InvitationsModel.updateOne({
+                _id: iid
+            }, {
+                status: 2
+            })
+            let r2 = await SecondhandContentModel.updateOne({
+                iid
+            }, {
+                takerId: openId,
+                buyerAddressId,
+                status: 2,
+                verify: '123456'
+            })
+
+            console.log(r1, r2)
+        } else {
+            code = 2 // 已经被承接了
+        }
+
+
+        let data = {
+            code
+        }
+
+        return data
+    },
 
 }
 

@@ -53,6 +53,108 @@ router.get('/deletePic', async (ctx, next) => {
     }
 })
 
+// 确认购买二手交易帖子
+router.get('/submitBuy', async (ctx, next) => {
+    console.log('/submitBuy')
+    let code = 0
+    let {
+        buyerAddressId,
+        iid
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.submitBuy(openid, buyerAddressId, iid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 确认承接跑腿帖子
+router.get('/submitHelp', async (ctx, next) => {
+    console.log('/submitHelp')
+    let code = 0
+    let {
+        takerContact,
+        iid
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.submitHelp(openid, takerContact, iid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我要帮忙界面需要的数据
+router.get('/getHelpData', async (ctx, next) => {
+    console.log('/getHelpData')
+    let code = 0
+    let iid = ctx.query.iid
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getHelpData(openid, iid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我要购买界面需要的数据
+router.get('/getBuyData', async (ctx, next) => {
+    console.log('/getBuyData')
+    let code = 0
+    let iid = ctx.query.iid
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getBuyData(openid, iid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 发布失物招领帖子
 router.get('/publishLostAndFound', async (ctx, next) => {
     console.log('/publishLostAndFound')
@@ -339,7 +441,7 @@ router.get('/getPostDetail', async (ctx, next) => {
         }
     }
 })
-// 搜索帖子
+// 主页搜索
 router.get('/searchInIndexPage', async (ctx, next) => {
     console.log('/searchInIndexPage')
     let code = 0
@@ -391,6 +493,151 @@ router.get('/searchInIndexPage', async (ctx, next) => {
             code: 1,
             data,
             str
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 校园热点搜索
+router.get('/searchSchoolNews', async (ctx, next) => {
+    console.log('/searchSchoolNews')
+    let code = 0
+    let {
+        searchStr,
+        classify
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchSchoolNews(searchStr, classify)
+
+        data = data.map((val, index) => {
+
+            // val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.detail = val.detail[0]
+            // val.comments = val.comments.length
+            // val.userDetail = val.userDetail[0]
+            return val
+        })
+        ctx.body = {
+            code: 1,
+            data
+
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 我的历史搜索
+router.get('/searchMyHistory', async (ctx, next) => {
+    console.log('/searchMyHistory')
+    let code = 0
+    let {
+        searchStr,
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyHistory(openid, searchStr)
+
+        data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
+            val.userDetail = val.userDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+        ctx.body = {
+            code: 1,
+            data
+
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 我的收藏搜索
+router.get('/searchMyCollect', async (ctx, next) => {
+    console.log('/searchMyCollect')
+    let code = 0
+    let {
+        searchStr
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyCollect(openid, searchStr)
+
+        data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
+            val.userDetail = val.userDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+        ctx.body = {
+            code: 1,
+            data
+
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 回复我的搜索
+router.get('/searchMyComment', async (ctx, next) => {
+    console.log('/searchMyComment')
+    let code = 0
+    let {
+        searchStr
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyComment(openid, searchStr)
+
+        data = data.map((val, index) => {
+            val.userDetail = val.userDetail[0]
+            val.myCommentDetail = val.myCommentDetail[0]
+            val.fatherCommentDetail = val.fatherCommentDetail[0]
+            val.invitationsDetail = val.invitationsDetail[0]
+            return val
+        })
+
+        ctx.body = {
+            code: 1,
+            data
+
         }
 
     } catch {

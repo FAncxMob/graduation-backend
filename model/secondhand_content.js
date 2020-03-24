@@ -24,6 +24,11 @@ let SecondhandContentSchema = mongoose.Schema({
         index: true,
         default: mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
     },
+    buyerAddressId: {
+        type: mongoose.Schema.Types.ObjectId,
+        index: true,
+        default: mongoose.Types.ObjectId('5e73a4fc3793ae3a44a97e52')
+    },
     takerId: {
         type: String,
         index: true,
@@ -32,7 +37,8 @@ let SecondhandContentSchema = mongoose.Schema({
     status: {
         type: Number,
         default: 0,
-        enum: [0, 1, 2, 3, 4], // 1：已接单，2：待核销，3：完成，4：中止
+        enum: [0, 1, 2, 3, 4, 5, 6, 7],
+        // 1：已被承接，2：已被购买，3：完成，4：中止，5：已结束 6：已找回 7：物归原主
         index: true
     },
     verify: {
