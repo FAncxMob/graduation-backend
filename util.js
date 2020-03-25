@@ -2126,6 +2126,97 @@ let dbOperate = {
 
     },
 
+    // 获取用于修改的帖子信息
+    async getPostDetailForUpdateAndAddWatchPost(openId, iid) {
+
+        let _id = mongoose.Types.ObjectId(iid)
+        let h = await InvitationsModel.aggregate([{
+            $match: {
+                _id: _id
+            }
+        }])
+        let classify = h[0].classify
+
+        let tableName = this.changeClassifyToStr(+classify)
+        let detail = await InvitationsModel.aggregate([{
+                $match: {
+                    _id: _id
+                }
+            },
+            {
+                $lookup: {
+                    from: `${tableName}_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'invitationsDetail'
+                }
+            },
+            // {
+            //     $project: {
+            //         "_id": 1,
+            //         "openId": 1,
+            //         "title": 1,
+            //         "desc": 1,
+            //         "pic": 1,
+            //         "price": 1,
+            //         "status": 1,
+            //         "classify": 1,
+            //         "createTime": 1,
+            //         "invitationsDetail": 1,
+            //     }
+            // }
+        ])
+        detail = detail[0]
+        detail.invitationsDetail = detail.invitationsDetail[0]
+
+
+        // 判断如果该用户已经浏览过该帖子 则只更改浏览时间为当前时间
+        let doc = await InvitationsWatchModel.find({
+            iid: _id,
+            openId
+        })
+        if (doc.length == 0) {
+            let n = new InvitationsWatchModel({
+                iid: _id,
+                openId: openId,
+                postOpenId: detail.openId,
+                createTime: Date.now()
+            })
+            await n.save()
+        } else {
+            await InvitationsWatchModel.updateOne({
+                iid: _id,
+                openId
+            }, {
+                createTime: Date.now()
+            })
+        }
+
+        if (classify == 2) {
+            if (detail.invitationsDetail.deliveryWay == 2) {
+                return data = {
+                    detail
+                }
+            }
+        }
+
+        let addressId = detail.invitationsDetail.addressId
+        addressId = mongoose.Types.ObjectId(addressId)
+        let addressData = await AddressModel.find({
+            _id: mongoose.Types.ObjectId(addressId)
+        })
+        addressData = addressData[0]
+
+        let data = {
+            detail,
+            addressData
+        }
+
+        return data
+
+
+    },
+
     // 将类型转换为关联表的表名：
     changeClassifyToStr(classify) {
         let str = ''
@@ -2281,9 +2372,9 @@ let dbOperate = {
     // 发布失物招领帖子
     async publishLostAndFound(openId, data) {
         data.pic = JSON.parse(data.pic)
-        data.pic = data.pic.map((val, index) => {
-            return config.host + '/' + val
-        })
+        // data.pic = data.pic.map((val, index) => {
+        //     return config.host + '/' + val
+        // })
         data.classify = +data.classify
         let createTime = Date.now()
         let invitations = new InvitationsModel({
@@ -2306,9 +2397,9 @@ let dbOperate = {
     // 发布兼职招聘帖子
     async publishPartTimeJob(openId, data) {
         data.pic = JSON.parse(data.pic)
-        data.pic = data.pic.map((val, index) => {
-            return config.host + '/' + val
-        })
+        // data.pic = data.pic.map((val, index) => {
+        //     return config.host + '/' + val
+        // })
         console.log(data)
         let createTime = Date.now()
         let invitations = new InvitationsModel({
@@ -2329,10 +2420,10 @@ let dbOperate = {
     // 发布跑腿帖子
     async publishLegWork(openId, data) {
         data.pic = JSON.parse(data.pic)
-        data.pic = data.pic.map((val, index) => {
-            // console.log(val)
-            return config.host + '/' + val
-        })
+        // data.pic = data.pic.map((val, index) => {
+        //     // console.log(val)
+        //     return config.host + '/' + val
+        // })
         // console.log(data)
         data.addressId = mongoose.Types.ObjectId(data.addressId)
         let createTime = Date.now()
@@ -2353,9 +2444,9 @@ let dbOperate = {
     // 发布二手交易帖子
     async publishSecondhand(openId, data) {
         data.pic = JSON.parse(data.pic)
-        data.pic = data.pic.map((val, index) => {
-            return config.host + '/' + val
-        })
+        // data.pic = data.pic.map((val, index) => {
+        //     return config.host + '/' + val
+        // })
         // console.log(data, 'data')
 
         data.deliveryAddressId = mongoose.Types.ObjectId(data.deliveryAddressId)
@@ -2457,7 +2548,8 @@ let dbOperate = {
 
     // 删除指定文件夹的图片
     deletePic(path) {
-        path = __dirname + '/uploads/' + path
+        let pathArr = path.split('/')
+        path = __dirname + '/uploads/' + pathArr[pathArr.length - 1]
         console.log(fs.existsSync(path), path)
         if (fs.existsSync(path)) {
             fs.unlinkSync(path);
@@ -2698,9 +2790,7 @@ let dbOperate = {
 
         return data
     },
-    async getMyReleaseLegwork(openId) {
 
-    },
     // 根据某用户某类别获取帖子数据(不要详情数据)
     async getMyReleaseByClassAndStatus(openId, classify, statusArr) {
         let classifyArr = []
@@ -2994,6 +3084,94 @@ let dbOperate = {
                 break;
         }
 
+    },
+
+    async updateLegWork(openId, data) {
+        let iid = mongoose.Types.ObjectId(data.iid)
+        delete data.iid
+        data.pic = JSON.parse(data.pic)
+        data.classify = +data.classify
+        data.addressId = mongoose.Types.ObjectId(data.addressId)
+        await InvitationsModel.updateOne({
+            _id: iid,
+        }, {
+            ...data
+        })
+        await LegworkContentModel.updateOne({
+            iid,
+        }, {
+            ...data
+        })
+    },
+    async updateSecondhand(openId, data) {
+        let iid = mongoose.Types.ObjectId(data.iid)
+        delete data.iid
+        data.pic = JSON.parse(data.pic)
+        data.classify = +data.classify
+        data.deliveryWay = +data.deliveryWay
+        if (data.deliveryWay !== 2) {
+            // deliveryAddressId不为空
+            data.deliveryAddressId = mongoose.Types.ObjectId(data.deliveryAddressId)
+
+            await InvitationsModel.updateOne({
+                _id: iid,
+            }, {
+                ...data
+            })
+            await SecondhandContentModel.updateOne({
+                iid,
+            }, {
+                ...data
+            })
+        } else {
+            // deliveryAddressId为空，要手动更改为空
+            await InvitationsModel.updateOne({
+                _id: iid,
+            }, {
+                ...data
+            })
+            await SecondhandContentModel.updateOne({
+                iid,
+            }, {
+                ...data,
+                deliveryAddressId: THE_NULL_OBJECT_ID,
+            })
+        }
+
+    },
+    async updatePartTimeJob(openId, data) {
+        let iid = mongoose.Types.ObjectId(data.iid)
+        delete data.iid
+        data.pic = JSON.parse(data.pic)
+        data.classify = +data.classify
+
+        await InvitationsModel.updateOne({
+            _id: iid,
+        }, {
+            ...data
+        })
+        let result = await PartTimeJobContentModel.updateOne({
+            iid,
+        }, {
+            ...data,
+        })
+    },
+    async updateLostAndFound(openId, data) {
+        let iid = mongoose.Types.ObjectId(data.iid)
+        delete data.iid
+        data.pic = JSON.parse(data.pic)
+        data.classify = +data.classify
+
+        await InvitationsModel.updateOne({
+            _id: iid,
+        }, {
+            ...data
+        })
+        let result = await LostAndFoundContentModel.updateOne({
+            iid,
+        }, {
+            ...data,
+        })
     },
 }
 

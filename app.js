@@ -8,7 +8,7 @@ let app = new Koa()
 let dbOperate = require('./util')
 
 var UserModel = require('./model/user')
-
+const config = require('./model/config')
 var jwt = require('jsonwebtoken');
 let Fly = require("flyio/src/node")
 let fly = new Fly;
@@ -42,7 +42,7 @@ router.post('/uploadPic', upload.single('file'), async (ctx, next) => {
     // console.log(ctx.req.file)
 
     ctx.body = {
-        fileName: ctx.req.file.filename //返回文件名
+        fileName: config.host + '/' + ctx.req.file.filename //返回文件名
     }
 })
 router.get('/deletePic', async (ctx, next) => {
@@ -54,6 +54,95 @@ router.get('/deletePic', async (ctx, next) => {
 })
 
 
+// 修改失物招领
+router.get('/updateLostAndFound', async (ctx, next) => {
+    console.log('/updateLostAndFound')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.updateLostAndFound(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+// 修改兼职招聘
+router.get('/updatePartTimeJob', async (ctx, next) => {
+    console.log('/updatePartTimeJob')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.updatePartTimeJob(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 修改二手交易
+router.get('/updateSecondhand', async (ctx, next) => {
+    console.log('/updateSecondhand')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.updateSecondhand(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 修改跑腿
+router.get('/updateLegWork', async (ctx, next) => {
+    console.log('/updateLegWork')
+    let code = 0
+    let data = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        await dbOperate.updateLegWork(openid, data)
+        ctx.body = {
+            code: 1
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 完成 status=>2 
 router.get('/complete', async (ctx, next) => {
     console.log('/complete')
@@ -542,6 +631,33 @@ router.get('/sendComment', async (ctx, next) => {
     }
 })
 
+// 获取帖子详情用于修改 ,并且将该openid访问该iid插入到帖子—_watch这个关联表
+router.get('/getPostDetailForUpdate', async (ctx, next) => {
+    console.log('/getPostDetailForUpdate')
+    let code = 0
+    let {
+        iid
+    } = ctx.query
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getPostDetailForUpdateAndAddWatchPost(openid, iid)
+
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取主页帖子详情,并且将该openid访问该iid插入到帖子—_watch这个关联表
 router.get('/getPostDetail', async (ctx, next) => {
     console.log('/getPostDetail')
@@ -1227,6 +1343,7 @@ router.get('/getOpenId', async (ctx, next) => {
     userInfo = JSON.parse(result.data)
     // 判断是新用户还是老用户
     let _haveUser = await dbOperate.haveUser(userInfo.openid)
+    console.log(userInfo)
 
     // 自定义登录状态，就是根据用户的openId和sessionKey进行加密生成token，返回给前端
     // d对openId和sessionKey进行加密,自定义登录状态
@@ -1235,7 +1352,8 @@ router.get('/getOpenId', async (ctx, next) => {
     // 3. 响应数据
     ctx.body = {
         token,
-        haveUser: _haveUser
+        haveUser: _haveUser,
+        openId: userInfo.openid
     }
 })
 
