@@ -54,6 +54,110 @@ router.get('/deletePic', async (ctx, next) => {
 })
 
 
+// 完成 status=>2 
+router.get('/complete', async (ctx, next) => {
+    console.log('/complete')
+    let code = 0
+    let {
+        iid,
+        classify
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.completeByClass(openid, iid, classify)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 删除 status=>6 
+router.get('/delete', async (ctx, next) => {
+    console.log('/delete')
+    let code = 0
+    let {
+        iid,
+        classify
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.deleteByClass(openid, iid, classify)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 上架 status=>  0 -> 3 
+router.get('/putOn', async (ctx, next) => {
+    console.log('/putOn')
+    let code = 0
+    let {
+        iid,
+        classify
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.putOnByClass(openid, iid, classify)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 下架 status=>  3 -> 0 
+router.get('/drop', async (ctx, next) => {
+    console.log('/drop')
+    let code = 0
+    let {
+        iid,
+        classify
+    } = ctx.query
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.dropByClass(openid, iid, classify)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 获取我发布的二手交易帖子，按类别分组
 router.get('/getMyReleaseLegwork', async (ctx, next) => {
     console.log('/getMyReleaseLegwork')
@@ -773,6 +877,28 @@ router.get('/getAddress', async (ctx, next) => {
             openid
         } = jwt.verify(token, PWD)
         let data = await dbOperate.getAddress(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我下架的全部帖子，按类别分组
+router.get('/getDrop', async (ctx, next) => {
+    console.log('/getDrop')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getDrop(openid)
         ctx.body = {
             code: 1,
             data

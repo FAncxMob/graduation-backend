@@ -7,10 +7,12 @@ var LegworkContentModel = require('./model/legwork_content')
 var SecondhandContentModel = require('./model/secondhand_content')
 var LostAndFoundContentModel = require('./model/lostAndFound_content')
 var PartTimeJobContentModel = require('./model/partTimeJob_content')
+var SchoolNewsContentModel = require('./model/schoolNews_content')
 
 var InvitationsLikeModel = require('./model/invitations_like')
 var InvitationsWatchModel = require('./model/invitations_watch')
 var InvitationsCollectModel = require('./model/invitations_collect')
+
 
 var CommentsModel = require('./model/comments')
 var CommentsLikeModel = require('./model/comments_like')
@@ -887,30 +889,64 @@ let dbOperate = {
 
     // 获取我发布的所有帖子
     async getAllPublish(openId) {
-        let legWork = {}
-        let secondHand = {}
-        let partTimeJob = {}
-        let lost = {}
-        let found = {}
-        legWork.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 0, [0])
-        legWork.statusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 0, [1])
-        legWork.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 0, [2])
-        secondHand.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 1, [0])
-        secondHand.statusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 1, [1])
-        secondHand.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 1, [2])
-        partTimeJob.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 2, [0])
-        partTimeJob.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 2, [2])
-        lost.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 3, [0])
-        lost.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 3, [2])
-        found.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 5, [0])
-        found.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 5, [2])
+        // let legWork = {}
+        // let secondHand = {}
+        // let partTimeJob = {}
+        // let lost = {}
+        // let found = {}
+        let legWorkStatusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 0, [0])
+        let legWorkStatusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 0, [1])
+        let legWorkStatusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 0, [2])
+
+        let secondHandStatusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 1, [0])
+        let secondHandStatusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 1, [1])
+        let secondHandStatusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 1, [2])
+
+        let partTimeJobStatusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 2, [0])
+        let partTimeJobStatusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 2, [2])
+
+        let lostStatusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 3, [0])
+        let lostStatusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 3, [2])
+
+        let foundStatusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 5, [0])
+        let foundStatusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 5, [2])
+
+        let data = {
+            legWorkStatusIs0,
+            legWorkStatusIs1,
+            legWorkStatusIs2,
+
+            secondHandStatusIs0,
+            secondHandStatusIs1,
+            secondHandStatusIs2,
+
+            partTimeJobStatusIs0,
+            partTimeJobStatusIs2,
+
+            lostStatusIs0,
+            lostStatusIs2,
+
+            foundStatusIs0,
+            foundStatusIs2,
+        }
+
+        return data
+    },
+    // 获取我下架的所有帖子
+    async getDrop(openId) {
+        let legWork = await this.getMyInvitationsByClassAndStatus(openId, 0, [3])
+        let secondHand = await this.getMyInvitationsByClassAndStatus(openId, 1, [3])
+        let partTimeJob = await this.getMyInvitationsByClassAndStatus(openId, 2, [3])
+
+        let lost = await this.getMyInvitationsByClassAndStatus(openId, 3, [3])
+        let found = await this.getMyInvitationsByClassAndStatus(openId, 5, [3])
 
         let data = {
             legWork,
             secondHand,
             partTimeJob,
             lost,
-            found
+            found,
         }
 
         return data
@@ -2023,7 +2059,6 @@ let dbOperate = {
         detail.watch = detail.watch.length
         detail.comments = detail.comments.length
         let num = await this.completedOrder(openId, classify)
-        console.log(num)
         detail.userDetail.completedOrderNum = num
 
 
@@ -2749,6 +2784,216 @@ let dbOperate = {
         })
 
         return data
+    },
+
+    // 下架 从0到3
+    async dropByClass(openId, iid, classify) {
+        iid = mongoose.Types.ObjectId(iid)
+        classify = +classify
+        await InvitationsModel.updateOne({
+            _id: iid,
+            classify
+        }, {
+            status: 3
+        })
+        console.log(iid, classify)
+        switch (classify) {
+            case 0:
+                await LegworkContentModel.updateOne({
+                    iid
+                }, {
+                    status: 3
+                })
+                break;
+            case 1:
+                await SecondhandContentModel.updateOne({
+                    iid
+                }, {
+                    status: 3
+                })
+                break;
+            case 2:
+                await PartTimeJobContentModel.updateOne({
+                    iid
+                }, {
+                    status: 3
+                })
+                break;
+            case 4:
+                await SchoolNewsContentModel.updateOne({
+                    iid
+                }, {
+                    status: 3
+                })
+                break;
+            case 3:
+            case 5:
+                await LostAndFoundContentModel.updateOne({
+                    iid
+                }, {
+                    status: 3
+                })
+                break;
+            default:
+                break;
+        }
+
+    },
+    // 上架 从3到0
+    async putOnByClass(openId, iid, classify) {
+        iid = mongoose.Types.ObjectId(iid)
+        classify = +classify
+        await InvitationsModel.updateOne({
+            _id: iid,
+            classify
+        }, {
+            status: 0
+        })
+        switch (classify) {
+            case 0:
+                await LegworkContentModel.updateOne({
+                    iid
+                }, {
+                    status: 0
+                })
+                break;
+            case 1:
+                await SecondhandContentModel.updateOne({
+                    iid
+                }, {
+                    status: 0
+                })
+                break;
+            case 2:
+                await PartTimeJobContentModel.updateOne({
+                    iid
+                }, {
+                    status: 0
+                })
+                break;
+            case 4:
+                await SchoolNewsContentModel.updateOne({
+                    iid
+                }, {
+                    status: 0
+                })
+                break;
+            case 3:
+            case 5:
+                await LostAndFoundContentModel.updateOne({
+                    iid
+                }, {
+                    status: 0
+                })
+                break;
+            default:
+                break;
+        }
+
+    },
+    // 删除 去6
+    async deleteByClass(openId, iid, classify) {
+        iid = mongoose.Types.ObjectId(iid)
+        classify = +classify
+        await InvitationsModel.updateOne({
+            _id: iid,
+            classify
+        }, {
+            status: 6
+        })
+        switch (classify) {
+            case 0:
+                await LegworkContentModel.updateOne({
+                    iid
+                }, {
+                    status: 6
+                })
+                break;
+            case 1:
+                await SecondhandContentModel.updateOne({
+                    iid
+                }, {
+                    status: 6
+                })
+                break;
+            case 2:
+                await PartTimeJobContentModel.updateOne({
+                    iid
+                }, {
+                    status: 6
+                })
+                break;
+            case 4:
+                await SchoolNewsContentModel.updateOne({
+                    iid
+                }, {
+                    status: 6
+                })
+                break;
+            case 3:
+            case 5:
+                await LostAndFoundContentModel.updateOne({
+                    iid
+                }, {
+                    status: 6
+                })
+                break;
+            default:
+                break;
+        }
+
+    },
+    // 完成 去2
+    async completeByClass(openId, iid, classify) {
+        iid = mongoose.Types.ObjectId(iid)
+        classify = +classify
+        await InvitationsModel.updateOne({
+            _id: iid,
+            classify
+        }, {
+            status: 2
+        })
+        switch (classify) {
+            case 0:
+                await LegworkContentModel.updateOne({
+                    iid
+                }, {
+                    status: 2
+                })
+                break;
+            case 1:
+                await SecondhandContentModel.updateOne({
+                    iid
+                }, {
+                    status: 2
+                })
+                break;
+            case 2:
+                await PartTimeJobContentModel.updateOne({
+                    iid
+                }, {
+                    status: 2
+                })
+                break;
+            case 4:
+                await SchoolNewsContentModel.updateOne({
+                    iid
+                }, {
+                    status: 2
+                })
+                break;
+            case 3:
+            case 5:
+                await LostAndFoundContentModel.updateOne({
+                    iid
+                }, {
+                    status: 2
+                })
+                break;
+            default:
+                break;
+        }
+
     },
 }
 
