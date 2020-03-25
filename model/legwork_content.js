@@ -35,8 +35,8 @@ let LegworkContentSchema = mongoose.Schema({
     status: {
         type: Number,
         default: 0,
-        enum: [0, 1, 2, 3, 4, 5, 6, 7],
-        // 1：已被承接，2：已被购买，3：完成，4：中止，5：已结束 6：已找回 7：物归原主
+        enum: [0, 1, 2, 3, 4, 5],
+        // 1：已被承接，2：完成(结束)， 3 下架，4 待中止 5.已中止
         index: true
     },
     takerContact: {

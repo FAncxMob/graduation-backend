@@ -810,18 +810,13 @@ let dbOperate = {
 
 
     // 根据某用户某类别获取帖子数据(不要详情数据)
-    async getMyInvitationsByClass(openId, classify) {
-        let classifyArr = []
-        if (classify == 3) {
-            classifyArr = [3, 5]
-        } else {
-            classifyArr = [classify]
-        }
+    async getMyInvitationsByClassAndStatus(openId, classify, statusArr) {
         let data = await InvitationsModel.aggregate([{
                 $match: {
                     openId,
-                    classify: {
-                        $in: classifyArr
+                    classify,
+                    status: {
+                        $in: statusArr
                     }
                 }
             }, {
@@ -872,8 +867,7 @@ let dbOperate = {
                     "watch": 1,
                     "comments": 1
                 }
-            },
-            {
+            }, {
                 $sort: {
                     "createTime": -1
                 }
@@ -893,16 +887,30 @@ let dbOperate = {
 
     // 获取我发布的所有帖子
     async getAllPublish(openId) {
-        let legWork = await this.getMyInvitationsByClass(openId, 0)
-        let secondHand = await this.getMyInvitationsByClass(openId, 1)
-        let partTimeJob = await this.getMyInvitationsByClass(openId, 2)
-        let lostAndFound = await this.getMyInvitationsByClass(openId, 3)
+        let legWork = {}
+        let secondHand = {}
+        let partTimeJob = {}
+        let lost = {}
+        let found = {}
+        legWork.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 0, [0])
+        legWork.statusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 0, [1])
+        legWork.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 0, [2])
+        secondHand.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 1, [0])
+        secondHand.statusIs1 = await this.getMyInvitationsByClassAndStatus(openId, 1, [1])
+        secondHand.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 1, [2])
+        partTimeJob.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 2, [0])
+        partTimeJob.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 2, [2])
+        lost.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 3, [0])
+        lost.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 3, [2])
+        found.statusIs0 = await this.getMyInvitationsByClassAndStatus(openId, 5, [0])
+        found.statusIs2 = await this.getMyInvitationsByClassAndStatus(openId, 5, [2])
 
         let data = {
             legWork,
             secondHand,
             partTimeJob,
-            lostAndFound
+            lost,
+            found
         }
 
         return data
@@ -1222,10 +1230,13 @@ let dbOperate = {
 
 
     // 根据某用户某类别获取帖子数据(不要详情数据)
-    async getInvitationsByClass(classify) {
+    async getInvitationsByClassAndStatus(classify, statusArr) {
         let data = await InvitationsModel.aggregate([{
                 $match: {
-                    classify
+                    classify,
+                    status: {
+                        $in: statusArr
+                    }
                 }
             }, {
                 $lookup: {
@@ -1327,11 +1338,34 @@ let dbOperate = {
 
     // 获取所有帖子
     async getAllPost() {
-        let legWork = await this.getInvitationsByClass(0)
-        let secondHand = await this.getInvitationsByClass(1)
-        let partTimeJob = await this.getInvitationsByClass(2)
-        let lost = await this.getInvitationsByClass(3)
-        let found = await this.getInvitationsByClass(5)
+        let legWork = {}
+        let secondHand = {}
+        let partTimeJob = {}
+        let lost = {}
+        let found = {}
+
+        legWork.statusIs0 = await this.getInvitationsByClassAndStatus(0, [0])
+        legWork.statusIs1 = await this.getInvitationsByClassAndStatus(0, [1])
+        legWork.statusIs2 = await this.getInvitationsByClassAndStatus(0, [2])
+        legWork.statusIs01245 = await this.getInvitationsByClassAndStatus(0, [0, 1, 2, 4, 5]) // 除了下架的
+
+        secondHand.statusIs0 = await this.getInvitationsByClassAndStatus(1, [0])
+        secondHand.statusIs1 = await this.getInvitationsByClassAndStatus(1, [1])
+        secondHand.statusIs2 = await this.getInvitationsByClassAndStatus(1, [2])
+        secondHand.statusIs01245 = await this.getInvitationsByClassAndStatus(1, [0, 1, 2, 4, 5])
+
+        partTimeJob.statusIs0 = await this.getInvitationsByClassAndStatus(2, [0])
+        partTimeJob.statusIs2 = await this.getInvitationsByClassAndStatus(2, [2])
+        partTimeJob.statusIs02 = await this.getInvitationsByClassAndStatus(2, [0, 2])
+
+        lost.statusIs0 = await this.getInvitationsByClassAndStatus(3, [0])
+        lost.statusIs2 = await this.getInvitationsByClassAndStatus(3, [2])
+        lost.statusIs02 = await this.getInvitationsByClassAndStatus(3, [0, 2])
+
+        found.statusIs0 = await this.getInvitationsByClassAndStatus(5, [0])
+        found.statusIs2 = await this.getInvitationsByClassAndStatus(5, [2])
+        found.statusIs02 = await this.getInvitationsByClassAndStatus(5, [0, 2])
+
         let data = {
             legWork,
             secondHand,
@@ -1342,10 +1376,30 @@ let dbOperate = {
         return data
     },
     // 主页查询帖子
-    async searchInIndexPage(searchStr, classify) {
-        // 注意类型，classify传进来是string类型的
-        // console.log(searchStr, classify)
-        let data = InvitationsModel.aggregate([{
+    async searchInIndexPage(searchStr, classify, statusArr) {
+        statusArr = JSON.parse(statusArr)
+        console.log(statusArr)
+        classify = +classify
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify,
+                    status: {
+                        $in: statusArr
+                    },
+                    $or: [ //多条件，数组
+                        {
+                            title: {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            desc: {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            }, {
                 $lookup: {
                     from: 'invitations_collect',
                     localField: '_id',
@@ -1408,44 +1462,25 @@ let dbOperate = {
             },
             {
                 $match: {
-                    classify: +classify,
-                    $or: [ //多条件，数组
-                        {
-                            title: {
-                                $regex: searchStr
-                            }
-                        },
-                        {
-                            desc: {
-                                $regex: searchStr
-                            }
-                        }
-                    ]
+                    status: {
+                        $in: statusArr
+                    },
                 }
-            },
-            {
+            }, {
                 $sort: {
                     "createTime": -1
                 }
             }
         ])
 
-
-        // data = data.map((val, index) => {
-
-        //     // val.like = val.like.length
-        //     // val.collect = val.collect.length
-        //     // val.watch = val.watch.length
-        //     // val.comments = val.comments.length
-        //     // val.userDetail = val.userDetail[0]
-        //     return val
-        // })
-
-        // let data = {
-        //     result,
-        //     classify: str
-        // }
-
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            val.userDetail = val.userDetail[0]
+            return val
+        })
         return data
     },
     // 校园热点查询帖子
@@ -1529,14 +1564,15 @@ let dbOperate = {
             }
         ])
 
-        // data = data.map((val, index) => {
-        //     // val.like = val.like.length
-        //     val.collect = val.collect.length
-        //     val.watch = val.watch.length
-        //     val.detail = val.detail[0]
-        //     // val.comments = val.comments.length
-        //     return val
-        // })
+        data = data.map((val, index) => {
+            // val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.detail = val.detail[0]
+            // val.comments = val.comments.length
+            // val.userDetail = val.userDetail[0]
+            return val
+        })
 
         return data
 
@@ -1640,6 +1676,15 @@ let dbOperate = {
             }
         ])
 
+        data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
+            val.userDetail = val.userDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
 
         return data
 
@@ -1743,6 +1788,16 @@ let dbOperate = {
                 }
             }
         ])
+
+        data = data.map((val, index) => {
+            val.invitationsDetail = val.invitationsDetail[0]
+            val.userDetail = val.userDetail[0]
+            val.collect = val.collect.length
+            val.like = val.like.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
         return data
 
     },
@@ -1841,6 +1896,15 @@ let dbOperate = {
                 }
             }
         ])
+
+
+        data = data.map((val, index) => {
+            val.userDetail = val.userDetail[0]
+            val.myCommentDetail = val.myCommentDetail[0]
+            val.fatherCommentDetail = val.fatherCommentDetail[0]
+            val.invitationsDetail = val.invitationsDetail[0]
+            return val
+        })
         return data
 
     },
@@ -2546,7 +2610,7 @@ let dbOperate = {
 
             console.log(r1, r2)
         } else {
-            code = 2 // 已经被承接了
+            code = 1 // 已经被承接了
         }
 
 
@@ -2576,14 +2640,14 @@ let dbOperate = {
             let r1 = await InvitationsModel.updateOne({
                 _id: iid
             }, {
-                status: 2
+                status: 1
             })
             let r2 = await SecondhandContentModel.updateOne({
                 iid
             }, {
                 takerId: openId,
                 buyerAddressId,
-                status: 2,
+                status: 1,
                 verify: '123456'
             })
 
@@ -2599,7 +2663,93 @@ let dbOperate = {
 
         return data
     },
+    async getMyReleaseLegwork(openId) {
 
+    },
+    // 根据某用户某类别获取帖子数据(不要详情数据)
+    async getMyReleaseByClassAndStatus(openId, classify, statusArr) {
+        let classifyArr = []
+        if (classify == 3) {
+            classifyArr = [3, 5]
+        } else {
+            classifyArr = [classify]
+        }
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    openId,
+                    classify: {
+                        $in: classifyArr
+                    },
+                    status: {
+                        $in: statusArr
+                    }
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "status": 1,
+                    "price": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+
+        return data
+    },
 }
 
 module.exports = dbOperate

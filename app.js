@@ -53,6 +53,31 @@ router.get('/deletePic', async (ctx, next) => {
     }
 })
 
+
+// 获取我发布的二手交易帖子，按类别分组
+router.get('/getMyReleaseLegwork', async (ctx, next) => {
+    console.log('/getMyReleaseLegwork')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getMyReleaseLegwork(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+
+
 // 确认购买二手交易帖子
 router.get('/submitBuy', async (ctx, next) => {
     console.log('/submitBuy')
@@ -447,7 +472,8 @@ router.get('/searchInIndexPage', async (ctx, next) => {
     let code = 0
     let {
         searchStr,
-        classify
+        classify,
+        statusArr
     } = ctx.query
     let str = ''
     switch (classify) {
@@ -478,21 +504,11 @@ router.get('/searchInIndexPage', async (ctx, next) => {
         let {
             openid
         } = jwt.verify(token, PWD)
-        let data = await dbOperate.searchInIndexPage(searchStr, classify)
-
-        data = data.map((val, index) => {
-
-            val.like = val.like.length
-            val.collect = val.collect.length
-            val.watch = val.watch.length
-            val.comments = val.comments.length
-            val.userDetail = val.userDetail[0]
-            return val
-        })
+        let data = await dbOperate.searchInIndexPage(searchStr, classify, statusArr)
         ctx.body = {
             code: 1,
             data,
-            str
+            classifyStr: str
         }
 
     } catch {
@@ -517,16 +533,6 @@ router.get('/searchSchoolNews', async (ctx, next) => {
         } = jwt.verify(token, PWD)
         let data = await dbOperate.searchSchoolNews(searchStr, classify)
 
-        data = data.map((val, index) => {
-
-            // val.like = val.like.length
-            val.collect = val.collect.length
-            val.watch = val.watch.length
-            val.detail = val.detail[0]
-            // val.comments = val.comments.length
-            // val.userDetail = val.userDetail[0]
-            return val
-        })
         ctx.body = {
             code: 1,
             data
@@ -554,15 +560,6 @@ router.get('/searchMyHistory', async (ctx, next) => {
         } = jwt.verify(token, PWD)
         let data = await dbOperate.searchMyHistory(openid, searchStr)
 
-        data = data.map((val, index) => {
-            val.invitationsDetail = val.invitationsDetail[0]
-            val.userDetail = val.userDetail[0]
-            val.collect = val.collect.length
-            val.like = val.like.length
-            val.watch = val.watch.length
-            val.comments = val.comments.length
-            return val
-        })
         ctx.body = {
             code: 1,
             data
@@ -590,15 +587,6 @@ router.get('/searchMyCollect', async (ctx, next) => {
         } = jwt.verify(token, PWD)
         let data = await dbOperate.searchMyCollect(openid, searchStr)
 
-        data = data.map((val, index) => {
-            val.invitationsDetail = val.invitationsDetail[0]
-            val.userDetail = val.userDetail[0]
-            val.collect = val.collect.length
-            val.like = val.like.length
-            val.watch = val.watch.length
-            val.comments = val.comments.length
-            return val
-        })
         ctx.body = {
             code: 1,
             data
@@ -626,13 +614,6 @@ router.get('/searchMyComment', async (ctx, next) => {
         } = jwt.verify(token, PWD)
         let data = await dbOperate.searchMyComment(openid, searchStr)
 
-        data = data.map((val, index) => {
-            val.userDetail = val.userDetail[0]
-            val.myCommentDetail = val.myCommentDetail[0]
-            val.fatherCommentDetail = val.fatherCommentDetail[0]
-            val.invitationsDetail = val.invitationsDetail[0]
-            return val
-        })
 
         ctx.body = {
             code: 1,
