@@ -686,6 +686,131 @@ router.get('/getPostDetail', async (ctx, next) => {
         }
     }
 })
+// 我购买的二手交易的搜索
+router.get('/searchMyBuyer', async (ctx, next) => {
+    console.log('/searchMyBuyer')
+    let code = 0
+    let {
+        searchStr,
+        statusArr
+    } = ctx.query
+    let _statusArr = JSON.parse(statusArr)
+    console.log(_statusArr)
+    let classifyStr = ''
+    if (_statusArr[0] === 1) {
+        classifyStr = 'secondHandStatusIs1'
+    } else if (_statusArr[0] === 2) {
+        classifyStr = 'secondHandStatusIs2'
+    }
+    console.log(classifyStr)
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyTakerByClassAndStatus(openid, 1, searchStr, statusArr)
+        ctx.body = {
+            code: 1,
+            data,
+            classifyStr
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 我承接的搜索
+router.get('/searchMyTaker', async (ctx, next) => {
+    console.log('/searchMyTaker')
+    let code = 0
+    let {
+        searchStr,
+        statusArr
+    } = ctx.query
+    let _statusArr = JSON.parse(statusArr)
+    console.log(_statusArr)
+    let classifyStr = ''
+    if (_statusArr[0] === 1) {
+        classifyStr = 'legWorkStatusIs1'
+    } else if (_statusArr[0] === 2) {
+        classifyStr = 'legWorkStatusIs2'
+    }
+    console.log(classifyStr)
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyTakerByClassAndStatus(openid, 0, searchStr, statusArr)
+        ctx.body = {
+            code: 1,
+            data,
+            classifyStr
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 我下架的搜索
+router.get('/searchMyDrop', async (ctx, next) => {
+    console.log('/searchMyDrop')
+    let code = 0
+    let {
+        searchStr,
+        classify,
+    } = ctx.query
+    let str = ''
+    switch (classify) {
+        case '0':
+            str = 'legWork'
+            break;
+        case '1':
+            str = 'secondHand'
+            break;
+        case '2':
+            str = 'partTimeJob'
+            break;
+        case '3':
+            str = 'lost'
+            break;
+        case '5':
+            str = 'found'
+            break;
+        default:
+            break;
+    }
+
+
+
+
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.searchMyDrop(searchStr, classify)
+        ctx.body = {
+            code: 1,
+            data,
+            classifyStr: str
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
 // 主页搜索
 router.get('/searchInIndexPage', async (ctx, next) => {
     console.log('/searchInIndexPage')
@@ -1015,6 +1140,50 @@ router.get('/getDrop', async (ctx, next) => {
             openid
         } = jwt.verify(token, PWD)
         let data = await dbOperate.getDrop(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我购买的的二手交易帖子
+router.get('/getMyBuyer', async (ctx, next) => {
+    console.log('/getMyBuyer')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getMyBuyer(openid)
+        ctx.body = {
+            code: 1,
+            data
+        }
+
+    } catch {
+        ctx.body = {
+            code: 0,
+            message: 'token验证失败辽'
+        }
+    }
+})
+// 获取我承接的校园拍腿部帖子
+router.get('/getMyTaker', async (ctx, next) => {
+    console.log('/getMyTaker')
+    let code = 0
+    let token = ctx.request.header.authorization
+    try {
+        let {
+            openid
+        } = jwt.verify(token, PWD)
+        let data = await dbOperate.getMyTaker(openid)
         ctx.body = {
             code: 1,
             data

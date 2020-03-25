@@ -886,6 +886,200 @@ let dbOperate = {
 
         return data
     },
+    // 获取takerId是我本人的帖子
+    async getMyTakerByClassAndStatus(openId, classify, statusArr) {
+        let tableName = this.changeClassifyToStr(+classify)
+
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify,
+                    status: {
+                        $in: statusArr
+                    }
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: `${tableName}_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'detail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "status": 1,
+                    "detail.takerId": 1,
+                    "price": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $match: {
+                    "detail.takerId": openId
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+
+        return data
+    },
+    // 搜索我承接的校园跑腿
+    async searchMyTakerByClassAndStatus(openId, classify, searchStr, statusArr) {
+        statusArr = JSON.parse(statusArr)
+        let tableName = this.changeClassifyToStr(+classify)
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify,
+                    status: {
+                        $in: statusArr
+                    },
+                    $or: [ //多条件，数组
+                        {
+                            title: {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            desc: {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: `${tableName}_content`,
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'detail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "status": 1,
+                    "detail.takerId": 1,
+                    "price": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1
+                }
+            },
+            {
+                $match: {
+                    "detail.takerId": openId
+                }
+            },
+            {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            return val
+        })
+
+        return data
+    },
 
     // 获取我发布的所有帖子
     async getAllPublish(openId) {
@@ -951,6 +1145,31 @@ let dbOperate = {
 
         return data
     },
+    // 获取我承接的校园跑腿
+    async getMyTaker(openId) {
+        let legWorkStatusIs1 = await this.getMyTakerByClassAndStatus(openId, 0, [1])
+        let legWorkStatusIs2 = await this.getMyTakerByClassAndStatus(openId, 0, [2])
+
+        let data = {
+            legWorkStatusIs1,
+            legWorkStatusIs2
+        }
+
+        return data
+    },
+    // 获取我购买的二手交易
+    async getMyBuyer(openId) {
+        let secondHandStatusIs1 = await this.getMyTakerByClassAndStatus(openId, 1, [1])
+        let secondHandStatusIs2 = await this.getMyTakerByClassAndStatus(openId, 1, [2])
+
+        let data = {
+            secondHandStatusIs1,
+            secondHandStatusIs2
+        }
+
+        return data
+    },
+
 
     // 获取用户的所有地址
     async getAddress(openId) {
@@ -1409,6 +1628,103 @@ let dbOperate = {
             lost,
             found
         }
+        return data
+    },
+
+    // 已下架查询帖子
+    async searchMyDrop(searchStr, classify) {
+        classify = +classify
+        let data = await InvitationsModel.aggregate([{
+                $match: {
+                    classify,
+                    $or: [ //多条件，数组
+                        {
+                            title: {
+                                $regex: searchStr
+                            }
+                        },
+                        {
+                            desc: {
+                                $regex: searchStr
+                            }
+                        }
+                    ]
+                }
+            }, {
+                $lookup: {
+                    from: 'invitations_collect',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'collect'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_like',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'like'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'invitations_watch',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'watch'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'comments',
+                    localField: '_id',
+                    foreignField: 'iid',
+                    as: 'comments'
+                }
+            },
+            {
+                $lookup: {
+                    from: 'user',
+                    localField: 'openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
+                $project: {
+                    "_id": 1,
+                    "openId": 1,
+                    "title": 1,
+                    "desc": 1,
+                    "pic": 1,
+                    "price": 1,
+                    "status": 1,
+                    "classify": 1,
+                    "createTime": 1,
+                    "collect": 1,
+                    "like": 1,
+                    "watch": 1,
+                    "comments": 1,
+                    "createTime": 1,
+                    "userDetail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
+                }
+            }, {
+                $sort: {
+                    "createTime": -1
+                }
+            }
+        ])
+
+        data = data.map((val, index) => {
+            val.like = val.like.length
+            val.collect = val.collect.length
+            val.watch = val.watch.length
+            val.comments = val.comments.length
+            val.userDetail = val.userDetail[0]
+            return val
+        })
         return data
     },
     // 主页查询帖子
@@ -2168,7 +2484,7 @@ let dbOperate = {
         ])
         detail = detail[0]
         detail.invitationsDetail = detail.invitationsDetail[0]
-
+        detail.invitationsDetail.deliveryWay = +detail.invitationsDetail.deliveryWay
 
         // 判断如果该用户已经浏览过该帖子 则只更改浏览时间为当前时间
         let doc = await InvitationsWatchModel.find({
@@ -2192,18 +2508,16 @@ let dbOperate = {
             })
         }
 
-        if (classify == 2) {
-            if (detail.invitationsDetail.deliveryWay == 2) {
-                return data = {
-                    detail
-                }
+        if (detail.invitationsDetail.deliveryWay && detail.invitationsDetail.deliveryWay === 2) {
+            return data = {
+                detail
             }
         }
 
-        let addressId = detail.invitationsDetail.addressId
-        addressId = mongoose.Types.ObjectId(addressId)
+        let deliveryAddressId = detail.invitationsDetail.deliveryAddressId
+        deliveryAddressId = mongoose.Types.ObjectId(deliveryAddressId)
         let addressData = await AddressModel.find({
-            _id: mongoose.Types.ObjectId(addressId)
+            _id: mongoose.Types.ObjectId(deliveryAddressId)
         })
         addressData = addressData[0]
 
