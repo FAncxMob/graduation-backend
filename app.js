@@ -702,7 +702,6 @@ router.get('/searchMyBuyer', async (ctx, next) => {
     } else if (_statusArr[0] === 2) {
         classifyStr = 'secondHandStatusIs2'
     }
-    console.log(classifyStr)
 
     let token = ctx.request.header.authorization
     try {
@@ -732,14 +731,12 @@ router.get('/searchMyTaker', async (ctx, next) => {
         statusArr
     } = ctx.query
     let _statusArr = JSON.parse(statusArr)
-    console.log(_statusArr)
     let classifyStr = ''
     if (_statusArr[0] === 1) {
         classifyStr = 'legWorkStatusIs1'
     } else if (_statusArr[0] === 2) {
         classifyStr = 'legWorkStatusIs2'
     }
-    console.log(classifyStr)
 
     let token = ctx.request.header.authorization
     try {
