@@ -76,6 +76,13 @@ let dbOperate = {
     // 保存openId
     async saveUserInfo(openId, data) {
 
+        let result = await UserModel.find({
+            openId
+        })
+        if (result.length > 0) {
+            return
+        }
+
         let n = new UserModel({
             openId: openId,
             ...data,
