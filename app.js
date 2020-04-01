@@ -45,6 +45,7 @@ router.post('/uploadPic', upload.single('file'), async (ctx, next) => {
         fileName: config.host + '/' + ctx.req.file.filename //返回文件名
     }
 })
+// 删除图片
 router.get('/deletePic', async (ctx, next) => {
     let path = ctx.query.path
     let result = await dbOperate.deletePic(path)

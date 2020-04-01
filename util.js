@@ -78,7 +78,7 @@ let dbOperate = {
             openId
         })
         if (result.length > 0) {
-            return
+            return '您已经注册过了'
         }
 
         let n = new UserModel({
