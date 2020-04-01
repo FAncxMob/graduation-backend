@@ -50,8 +50,6 @@ let dbOperate = {
             "openId": 0,
             "__v": 0,
             "idCard": 0
-            // "sno": 0,
-            // "name": 0
         })
         doc = doc[0]
         return doc
@@ -94,7 +92,7 @@ let dbOperate = {
     // 判断openId是否已经存在 true: 存在。false：不存在
     async haveUser(openId) {
         let doc = await UserModel.find({
-            "openId": openId
+            openId
         })
         return doc.length
     },
@@ -2516,18 +2514,32 @@ let dbOperate = {
             })
         }
 
+        console.log(detail.invitationsDetail)
+
         if (detail.invitationsDetail.deliveryWay && detail.invitationsDetail.deliveryWay === 2) {
             return data = {
                 detail
             }
         }
+        let addressData
+        if (classify === 1) {
+            // 二手
+            let deliveryAddressId = detail.invitationsDetail.deliveryAddressId
+            deliveryAddressId = mongoose.Types.ObjectId(deliveryAddressId)
+            addressData = await AddressModel.find({
+                _id: deliveryAddressId
+            })
+            addressData = addressData[0]
+        } else if (classify === 0) {
+            let addressId = detail.invitationsDetail.addressId
+            addressId = mongoose.Types.ObjectId(addressId)
+            addressData = await AddressModel.find({
+                _id: addressId
+            })
+            addressData = addressData[0]
+        }
 
-        let deliveryAddressId = detail.invitationsDetail.deliveryAddressId
-        deliveryAddressId = mongoose.Types.ObjectId(deliveryAddressId)
-        let addressData = await AddressModel.find({
-            _id: mongoose.Types.ObjectId(deliveryAddressId)
-        })
-        addressData = addressData[0]
+
 
         let data = {
             detail,
