@@ -2,45 +2,46 @@ let mongoose = require('./db.js')
 
 let LegworkContentSchema = mongoose.Schema({
     iid: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
-    uid: {
-        type: Number,
+    openId: {
+        type: String,
         index: true
     },
-    title: String,
     tag: String,
-    desc: String,
-    pic: String,
-    price: {
-        type: Number,
-        default: 99999
+    // price: {
+    //     type: Number,
+    //     default: 99999
+    // },
+    expectedTime: {
+        type: String
     },
-    expectedTime: String,
     addressId: {
-        type: Number,
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
     takerId: {
-        type: Number,
+        type: String,
         index: true,
-        default: 0
+        default: ''
     },
-    status: {
-        type: Number,
-        default: 0,
-        enum: [0, 1, 2, 3, 4], // 1：已接单，2：待核销，3：完成，4：中止
-        index: true
-    },
+
     verify: {
         type: String,
         default: '',
         index: true
     },
-    createTime: {
+    status: {
         type: Number,
+        default: 0,
+        enum: [0, 1, 2, 3, 4, 5, 6],
+        // 1：已被承接，2：完成(结束)， 3 下架(只有0可以下架)，4 待中止 5.已中止  6 删除(0,2可以删除，做的假删除)
         index: true
+    },
+    takerContact: {
+        type: String,
+        default: ''
     }
 
 })

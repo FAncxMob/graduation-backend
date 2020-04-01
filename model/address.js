@@ -1,12 +1,12 @@
 let mongoose = require('./db.js')
 
 let AddressSchema = mongoose.Schema({
-    addressId: {
-        type: Number,
-        index: true
-    },
-    uid: {
-        type: Number,
+    // addressId: {
+    //     type: String,
+    //     index: true
+    // },
+    openId: {
+        type: String,
         index: true // 索引
     },
     name: {
@@ -26,7 +26,8 @@ let AddressSchema = mongoose.Schema({
         type: Number,
         enum: [0, 1], // 0：不是默认 1： 是默认
         default: 0,
-    }
+    },
+    tag: String
 })
 
 module.exports = mongoose.model('address', AddressSchema, 'address')

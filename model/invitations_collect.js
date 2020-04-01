@@ -1,18 +1,23 @@
 let mongoose = require('./db.js')
 
 let InvitationsCollectSchema = mongoose.Schema({
-    invitationsId: {
-        type: Number,
+    iid: {
+        type: mongoose.Schema.Types.ObjectId,
         index: true
     },
-    userId: {
-        type: Number,
+    openId: {
+        type: String,
+        index: true
+    },
+    postOpenId: {
+        type: String,
         index: true
     },
     createTime: {
-        type: String,
-        index: true
-    }
+        type: Number,
+        index: true,
+        default: Date.now()
+    },
 })
 
 

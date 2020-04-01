@@ -1,20 +1,25 @@
 let mongoose = require('./db.js')
 
 let CommentsLikeSchema = mongoose.Schema({
-    userId: {
-        type: Number,
-        index:true  
+    openId: {
+        type: String,
+        index: true
     },
     commentId: {
-        type: Number,
-        index:true
+        type: mongoose.Schema.Types.ObjectId,
+        index: true
     },
     createTime: {
+        type: Number,
+        index: true,
+        default: Date.now()
+    },
+    postOpenId: {
         type: String,
-        index:true
+        index: true
     }
 })
 
 
 
-module.exports = mongoose.model('comments_like',CommentsLikeSchema,'comments_like')
+module.exports = mongoose.model('comments_like', CommentsLikeSchema, 'comments_like')

@@ -1,22 +1,39 @@
 let mongoose = require('./db.js')
 
 let UserSchema = mongoose.Schema({
-    userId: {
-        type: Number,
-        index: true
+    openId: {
+        type: String,
+        require: true,
+        index: true,
     },
-    openId: Number,
-    nickname: String,
-    avatar: String,
-    desc: String,
+    tel: String,
+    idCard: String,
+    name: String,
+    desc: {
+        type: String,
+        default: '写点什么来介绍一下自己吧~'
+    },
     school: String,
     faculty: String,
     major: String,
-    sno: Number,
+    sno: String,
     status: {
         type: Number,
         default: 1
     },
+    nickName: String,
+    // gender: {
+    //     type: Number,
+    //     default: 1,
+    //     enum: [1, 2], // 1：男，2：女
+    // },
+    avatar: String,
+    createTime: {
+        type: Number,
+        index: true,
+        default: Date.now()
+    },
+
 })
 
 // 静态方法
@@ -25,14 +42,17 @@ let UserSchema = mongoose.Schema({
 UserSchema.statics.createUser = function (num, cb) {
     for (let index = 1; index <= num; index++) {
         let u = new this({
-            userId: index,
-            openId: index,
-            nickname: `nameIs ${index}`,
-            avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132',
+            openId: `${index}`,
+            tel: `${index}`,
+            idCard: `${index}`,
+            name: `我是用户${index}的姓名啦`,
+            desc: `我是用户${index}的个性签名~`,
             school: '湖北经济学院',
             faculty: '信息与通信工程',
             major: '软件工程',
-            sno: `1616${index}`
+            sno: `${index}`,
+            nickName: `我是用户${index}的昵称啦`,
+            avatar: 'https://wx.qlogo.cn/mmopen/vi_32/Q0j4TwGTfTLWheJRmxCGTbHncmcqgWhOVsd6nPsTAK6cbpuCibMs5icibzSZBZH0KzNZk2DYIAvlBBpk0hibg98wmw/132'
         })
 
         u.save(function (err, doc) {
@@ -47,7 +67,7 @@ UserSchema.statics.createUser = function (num, cb) {
 }
 
 // 清空User
-UserSchema.statics.removeAllUser = function (a, cb) {
+UserSchema.statics.removeAllUser = function (cb) {
     this.remove({
         "major": "软件工程"
     }, (err, doc) => {
