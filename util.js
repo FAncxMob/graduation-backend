@@ -73,7 +73,7 @@ let dbOperate = {
     },
     // 保存openId
     async saveUserInfo(openId, data) {
-
+        console.log(openId, data)
         let result = await UserModel.find({
             openId
         })
@@ -943,6 +943,14 @@ let dbOperate = {
                 }
             },
             {
+                $lookup: {
+                    from: 'user',
+                    localField: 'detail.openId',
+                    foreignField: 'openId',
+                    as: 'userDetail'
+                }
+            },
+            {
                 $project: {
                     "_id": 1,
                     "openId": 1,
@@ -951,6 +959,9 @@ let dbOperate = {
                     "pic": 1,
                     "status": 1,
                     "detail.takerId": 1,
+                    "detail.openId": 1,
+                    "userDetail.avatar": 1,
+                    "userDetail.nickName": 1,
                     "price": 1,
                     "classify": 1,
                     "createTime": 1,
@@ -960,11 +971,13 @@ let dbOperate = {
                     "comments": 1
                 }
             },
+
             {
                 $match: {
                     "detail.takerId": openId
                 }
             },
+
             {
                 $sort: {
                     "createTime": -1
@@ -977,6 +990,7 @@ let dbOperate = {
             val.collect = val.collect.length
             val.watch = val.watch.length
             val.comments = val.comments.length
+            val.userDetail = val.userDetail[0]
             return val
         })
 
@@ -1188,7 +1202,9 @@ let dbOperate = {
     },
     // 添加地址
     async addAddress(openId, newAddress) {
+        newAddress.status = +newAddress.status
         if (newAddress.status) {
+            console.log(newAddress)
             // 将该人原来为默认地址的status设为0
             await AddressModel.updateOne({
                 openId,

@@ -1507,7 +1507,7 @@ router.get('/getOpenId', async (ctx, next) => {
     let url = `https://api.weixin.qq.com/sns/jscode2session?appid=${appId}&secret=${appSecret}&js_code=${code}&grant_type=authorization_code`
     // 发送请求给微信接口，获取openId
     let result = await fly.get(url)
-    userInfo = JSON.parse(result.data)
+    let userInfo = JSON.parse(result.data)
     // 判断是新用户还是老用户
     let _haveUser = await dbOperate.haveUser(userInfo.openid)
     console.log(userInfo)
